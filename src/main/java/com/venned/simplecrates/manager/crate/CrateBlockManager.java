@@ -1,8 +1,8 @@
-package com.venned.simplecrates.manager;
+package com.venned.simplecrates.manager.crate;
 
 import com.venned.simplecrates.Main;
-import com.venned.simplecrates.build.Crate;
-import com.venned.simplecrates.build.CrateBlock;
+import com.venned.simplecrates.build.crate.Crate;
+import com.venned.simplecrates.build.crate.CrateBlock;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;

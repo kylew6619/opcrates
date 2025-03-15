@@ -1,6 +1,7 @@
-package com.venned.simplecrates.build;
+package com.venned.simplecrates.build.crate;
 
 import com.venned.simplecrates.Main;
+import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.player.PlayerData;
 import com.venned.simplecrates.gui.opening.CreateOpening;
 import com.venned.simplecrates.interfaces.Opening;

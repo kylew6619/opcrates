@@ -9,4 +9,5 @@ public class NameSpaceUtils {
     public static NamespacedKey crate = new NamespacedKey(Main.getPlugin(Main.class), "crate");
     public static NamespacedKey rewardName = new NamespacedKey(Main.getPlugin(Main.class), "rewardname");
     public static NamespacedKey key = new NamespacedKey(Main.getPlugin(Main.class), "key");
+    public static NamespacedKey backpackGUI = new NamespacedKey(Main.getPlugin(Main.class), "backpackGUI");
 }

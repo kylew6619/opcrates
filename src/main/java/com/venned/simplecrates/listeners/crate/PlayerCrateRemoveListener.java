@@ -1,7 +1,7 @@
 package com.venned.simplecrates.listeners.crate;
 
-import com.venned.simplecrates.build.CrateBlock;
-import com.venned.simplecrates.manager.CrateBlockManager;
+import com.venned.simplecrates.build.crate.CrateBlock;
+import com.venned.simplecrates.manager.crate.CrateBlockManager;
 import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

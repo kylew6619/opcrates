@@ -1,4 +1,4 @@
-package com.venned.simplecrates.manager;
+package com.venned.simplecrates.manager.lootbox;
 
 import com.venned.simplecrates.Main;
 import com.venned.simplecrates.build.ItemReward;
@@ -8,8 +8,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.util.io.BukkitObjectInputStream;
-import org.bukkit.util.io.BukkitObjectOutputStream;
 
 import java.io.*;
 import java.util.*;

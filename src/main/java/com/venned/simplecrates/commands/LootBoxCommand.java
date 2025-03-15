@@ -3,7 +3,7 @@ package com.venned.simplecrates.commands;
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.LootBox;
 import com.venned.simplecrates.gui.edit.EditChances;
-import com.venned.simplecrates.manager.LootBoxManager;
+import com.venned.simplecrates.manager.lootbox.LootBoxManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;

@@ -2,19 +2,23 @@ package com.venned.simplecrates;
 
 import com.venned.simplecrates.commands.LootBoxCommand;
 import com.venned.simplecrates.commands.LootBoxTabCompleter;
+import com.venned.simplecrates.commands.backpack.BackPackCommand;
 import com.venned.simplecrates.commands.crates.CrateCommand;
+import com.venned.simplecrates.gui.backpack.BackPackGUI;
 import com.venned.simplecrates.gui.edit.EditChances;
 import com.venned.simplecrates.gui.edit.EditOptions;
 import com.venned.simplecrates.gui.listener.EditListener;
 import com.venned.simplecrates.gui.preview.PreviewRewards;
+import com.venned.simplecrates.listeners.backpack.PlayerReceivedKeyListener;
 import com.venned.simplecrates.listeners.crate.PlayerCrateCloseListener;
 import com.venned.simplecrates.listeners.crate.PlayerCrateListener;
 import com.venned.simplecrates.listeners.PlayerLootBoxListener;
 import com.venned.simplecrates.listeners.crate.PlayerCrateRemoveListener;
 import com.venned.simplecrates.listeners.data.PlayerJoinListener;
-import com.venned.simplecrates.manager.CrateBlockManager;
-import com.venned.simplecrates.manager.CrateManager;
-import com.venned.simplecrates.manager.LootBoxManager;
+import com.venned.simplecrates.manager.BackPackConfig;
+import com.venned.simplecrates.manager.crate.CrateBlockManager;
+import com.venned.simplecrates.manager.crate.CrateManager;
+import com.venned.simplecrates.manager.lootbox.LootBoxManager;
 import com.venned.simplecrates.manager.player.PlayerManager;
 import com.venned.simplecrates.task.HologramChestTask;
 import org.bukkit.Bukkit;
@@ -32,10 +36,13 @@ public final class Main extends JavaPlugin implements Listener {
     LootBoxManager lootBoxManager;
     EditChances editChances;
     EditOptions editOptions;
+    BackPackGUI backPackGUI;
     PreviewRewards previewRewards;
     CrateManager crateManager;
     CrateBlockManager crateBlockManager;
     PlayerManager playerManager;
+
+    BackPackConfig backPackConfig;
 
     @Override
     public void onEnable() {
@@ -49,10 +56,16 @@ public final class Main extends JavaPlugin implements Listener {
         editChances = new EditChances();
         editOptions = new EditOptions();
         previewRewards = new PreviewRewards(this);
-        playerManager = new PlayerManager(this);
+        playerManager = new PlayerManager(this, crateManager);
+
+        backPackConfig = new BackPackConfig(crateManager);
+
+        backPackGUI = new BackPackGUI(backPackConfig, playerManager, this);
 
         loadCommands();
         loadListeners();
+
+
 
         Bukkit.getScheduler().runTaskTimer(this, playerManager::saveAllPlayers, 200, 200);
 
@@ -75,19 +88,20 @@ public final class Main extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new PlayerCrateCloseListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerCrateRemoveListener(crateBlockManager), this);
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
+        getServer().getPluginManager().registerEvents(new PlayerReceivedKeyListener(playerManager, backPackConfig), this);
     }
 
     void loadCommands(){
         getCommand("lootbox").setExecutor(new LootBoxCommand(lootBoxManager, editChances));
         getCommand("lootbox").setTabCompleter(new LootBoxTabCompleter(lootBoxManager));
         getCommand("crate").setExecutor(new CrateCommand(crateManager, editChances, crateBlockManager, playerManager));
+        getCommand("keybp").setExecutor(new BackPackCommand(playerManager, backPackConfig, crateManager, backPackGUI));
     }
 
 
     public static String getMessage(String key, Map<String, String> placeholders) {
         String message = Main.getInstance().getConfig().getString("messages." + key, "&cMessage not found: " + key);
 
-        // Reemplazar los placeholders
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
             message = message.replace("{" + entry.getKey() + "}", entry.getValue());
         }
@@ -95,6 +109,9 @@ public final class Main extends JavaPlugin implements Listener {
         return ChatColor.translateAlternateColorCodes('&', message);
     }
 
+    public BackPackConfig getBackPackConfig() {
+        return backPackConfig;
+    }
 
     public CrateBlockManager getCrateBlockManager() {
         return crateBlockManager;

@@ -1,14 +1,14 @@
 package com.venned.simplecrates.commands.crates;
 
 import com.venned.simplecrates.Main;
-import com.venned.simplecrates.build.Crate;
-import com.venned.simplecrates.build.CrateBlock;
+import com.venned.simplecrates.build.crate.Crate;
+import com.venned.simplecrates.build.crate.CrateBlock;
 import com.venned.simplecrates.build.ItemReward;
-import com.venned.simplecrates.build.LootBox;
 import com.venned.simplecrates.build.player.PlayerData;
+import com.venned.simplecrates.events.PlayerReceivedKeyEvent;
 import com.venned.simplecrates.gui.edit.EditChances;
-import com.venned.simplecrates.manager.CrateBlockManager;
-import com.venned.simplecrates.manager.CrateManager;
+import com.venned.simplecrates.manager.crate.CrateBlockManager;
+import com.venned.simplecrates.manager.crate.CrateManager;
 import com.venned.simplecrates.manager.player.PlayerManager;
 import com.venned.simplecrates.utils.NameSpaceUtils;
 import org.bukkit.*;
@@ -283,6 +283,11 @@ public class CrateCommand implements CommandExecutor {
                     itemStack.setAmount(amount);
 
                     for(Player players : Bukkit.getOnlinePlayers()){
+                        PlayerReceivedKeyEvent playerReceivedKeyEvent = new PlayerReceivedKeyEvent(players, itemStack, amount, lootBox);
+                        Bukkit.getServer().getPluginManager().callEvent(playerReceivedKeyEvent);
+                        if(playerReceivedKeyEvent.isCancelled()){
+                            continue;
+                        }
                         players.getInventory().addItem(itemStack);
                     }
                     break;
@@ -317,6 +322,12 @@ public class CrateCommand implements CommandExecutor {
 
                     ItemStack itemStack = lootBox.getItemKey().clone();
                     itemStack.setAmount(amount);
+
+                    PlayerReceivedKeyEvent playerReceivedKeyEvent = new PlayerReceivedKeyEvent(player, itemStack, amount, lootBox);
+                    Bukkit.getServer().getPluginManager().callEvent(playerReceivedKeyEvent);
+                    if(playerReceivedKeyEvent.isCancelled()){
+                        return true;
+                    }
                     playerFind.getInventory().addItem(itemStack);
                     playerFind.sendMessage("§c§l(!) §dCrate Key " + name + " item was given to you");
                     break;

@@ -1,11 +1,9 @@
 package com.venned.simplecrates.task;
 
 import com.venned.simplecrates.Main;
-import com.venned.simplecrates.build.CrateBlock;
-import net.minecraft.core.BlockPos;
+import com.venned.simplecrates.build.crate.CrateBlock;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
-import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
 import net.minecraft.world.entity.Display;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

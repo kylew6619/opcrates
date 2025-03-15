@@ -7,3 +7,5 @@ commands:
     description: Manager Command
   crate:
     description: Crate Manager
+  keybp:
+    description: BackPack

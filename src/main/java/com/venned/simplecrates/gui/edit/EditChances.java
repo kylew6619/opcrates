@@ -1,6 +1,5 @@
 package com.venned.simplecrates.gui.edit;
 
-import com.venned.simplecrates.build.Crate;
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.LootBox;
 import com.venned.simplecrates.build.player.PlayerEditChances;

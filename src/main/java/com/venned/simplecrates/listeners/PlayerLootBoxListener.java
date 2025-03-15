@@ -3,7 +3,7 @@ package com.venned.simplecrates.listeners;
 import com.venned.simplecrates.Main;
 import com.venned.simplecrates.build.LootBox;
 import com.venned.simplecrates.gui.preview.PreviewRewards;
-import com.venned.simplecrates.manager.LootBoxManager;
+import com.venned.simplecrates.manager.lootbox.LootBoxManager;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

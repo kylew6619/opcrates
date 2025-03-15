@@ -1,12 +1,12 @@
 package com.venned.simplecrates.listeners.crate;
 
 import com.venned.simplecrates.Main;
-import com.venned.simplecrates.build.Crate;
-import com.venned.simplecrates.build.CrateBlock;
+import com.venned.simplecrates.build.crate.Crate;
+import com.venned.simplecrates.build.crate.CrateBlock;
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.player.PlayerData;
 import com.venned.simplecrates.gui.preview.PreviewRewards;
-import com.venned.simplecrates.manager.CrateBlockManager;
+import com.venned.simplecrates.manager.crate.CrateBlockManager;
 import com.venned.simplecrates.manager.player.PlayerManager;
 import com.venned.simplecrates.utils.NameSpaceUtils;
 import org.bukkit.Bukkit;

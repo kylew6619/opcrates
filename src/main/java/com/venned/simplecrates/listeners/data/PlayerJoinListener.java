@@ -13,7 +13,7 @@ public class PlayerJoinListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         PlayerManager manager = Main.getInstance().getPlayerManager();
         if(manager.getPlayerDatas().stream().noneMatch(u->u.getUUID().equals(event.getPlayer().getUniqueId()))) {
-            PlayerData playerData = new PlayerData(event.getPlayer().getUniqueId(), true);
+            PlayerData playerData = new PlayerData(event.getPlayer().getUniqueId(), true, false);
             manager.getPlayerDatas().add(playerData);
         }
     }
