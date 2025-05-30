@@ -1,8 +1,6 @@
 package com.venned.simplecrates.build.player;
 
-import com.venned.simplecrates.build.Crate;
 import com.venned.simplecrates.build.ItemReward;
-import com.venned.simplecrates.build.LootBox;
 import com.venned.simplecrates.enums.EditMode;
 import com.venned.simplecrates.interfaces.Opening;
 import org.bukkit.entity.Player;

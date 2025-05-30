@@ -128,6 +128,6 @@ public class HologramTextUtils {
                     }
                 }
             }
-        }.runTaskLater(Main.getInstance(), 200L); // 200 ticks = 10 segundos
+        }.runTaskLater(Main.getInstance(), 100L); // 200 ticks = 10 segundos
     }
 }

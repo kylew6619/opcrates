@@ -2,13 +2,18 @@ package com.venned.simplecrates.gui.preview;
 
 import com.venned.simplecrates.Main;
 import com.venned.simplecrates.build.ItemReward;
+import com.venned.simplecrates.build.crate.Crate;
 import com.venned.simplecrates.build.player.PlayerPreview;
+import com.venned.simplecrates.interfaces.Opening;
 import com.venned.simplecrates.utils.NameSpaceUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,12 +23,21 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PreviewRewards implements Listener {
+
+    public static  enum TypePreview {
+
+        LOOTBOX,
+        CRATE
+
+    }
 
     Set<PlayerPreview> previewMenu;
 
@@ -32,7 +46,7 @@ public class PreviewRewards implements Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    public void onPreview(Player player, List<ItemReward> rewards, String title) {
+    public void onPreview(Player player, List<ItemReward> rewards, String title, TypePreview typePreview, Opening opening) {
 
         Inventory inventory = Bukkit.createInventory(null, 54, title);
 
@@ -52,17 +66,38 @@ public class PreviewRewards implements Listener {
 
             List<String> lore = new ArrayList<>(config.getStringList("lore-preview"));
 
-
-
             if (itemMeta.getLore() == null) {
 
                 lore.add(" ");
-                for (int z = 0; z < lore.size(); z++) {
-                    lore.set(z, lore.get(z)
-                            .replace("{chance}", String.valueOf(itemReward.getChance()))
-                            .replace("{status}", itemReward.getDisabledPlayers().contains(player.getUniqueId()) ? "Disabled" : "Enabled")
-                            .replace("&", "§")
-                    );
+                if(typePreview == TypePreview.CRATE) {
+
+                    boolean isDisabled = itemReward.getDisabledPlayers().contains(player.getUniqueId());
+
+                    String statusKey = isDisabled ? "DISABLED" : "ENABLED";
+                    ConfigurationSection statusSection = config.getConfigurationSection("status-color." + statusKey);
+                    String colorName = statusSection != null ? statusSection.getString("color", "GRAY") : "GRAY";
+                    boolean isBold = statusSection != null && statusSection.getBoolean("bold", false);
+
+
+                    ChatColor chatColor;
+                    try {
+                        chatColor = ChatColor.valueOf(colorName.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        chatColor = ChatColor.GRAY;
+                    }
+
+                    String status = (isBold ? ChatColor.BOLD : "") + "" + chatColor + statusKey;
+
+
+                    for (int z = 0; z < lore.size(); z++) {
+                        lore.set(z, lore.get(z)
+                                .replace("{chance}", String.valueOf(itemReward.getChance()))
+                                .replace("{status}", status)
+                                .replace("&", "§")
+                        );
+                    }
+                } else {
+                    lore.clear();
                 }
 
                 itemMeta.getPersistentDataContainer().set(NameSpaceUtils.rewardName, PersistentDataType.STRING, itemReward.getName());
@@ -71,19 +106,23 @@ public class PreviewRewards implements Listener {
                 } else if (itemMeta.getLore() != null || !itemMeta.getLore().isEmpty()) {
                     List<String> loreGet = itemMeta.getLore();
                     lore.add(" ");
-                for (int z = 0; z < lore.size(); z++) {
-                    lore.set(z, lore.get(z)
-                            .replace("{chance}", String.valueOf(itemReward.getChance()))
-                            .replace("{status}", itemReward.getDisabledPlayers().contains(player.getUniqueId()) ? "Disabled" : "Enabled")
-                            .replace("&", "§")
-                    );
+                if(typePreview == TypePreview.CRATE) {
+                    for (int z = 0; z < lore.size(); z++) {
+                        lore.set(z, lore.get(z)
+                                .replace("{chance}", String.valueOf(itemReward.getChance()))
+                                .replace("{status}", itemReward.getDisabledPlayers().contains(player.getUniqueId()) ? "Disabled" : "Enabled")
+                                .replace("&", "§")
+                        );
+                    }
+                }  else {
+                    lore.clear();
+                    lore.addAll(loreGet);
                 }
 
                     itemMeta.getPersistentDataContainer().set(NameSpaceUtils.rewardName, PersistentDataType.STRING, itemReward.getName());
                     itemMeta.setLore(lore);
                 }
             itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-
             itemMeta.addAttributeModifier(Attribute.LUCK, new AttributeModifier(
                     "dummy",
                     0,
@@ -92,8 +131,16 @@ public class PreviewRewards implements Listener {
 
             itemMeta.setDisplayName(itemReward.getName().replace("&", "§"));
 
+            if(itemReward.isGlow()){
+                if(itemMeta.getEnchants().isEmpty()) {
+                    itemMeta.addEnchant(Enchantment.LOOTING, 1, true);
+                    itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                }
+            }
+
                 itemStack.setItemMeta(itemMeta);
                 inventory.setItem(i, itemStack);
+
 
                 modified.add(itemReward);
 
@@ -101,13 +148,15 @@ public class PreviewRewards implements Listener {
         player.openInventory(inventory);
 
         previewMenu.removeIf(p->p.getUUID().equals(player.getUniqueId()));
-        previewMenu.add(new PlayerPreview(inventory, rewards, player.getUniqueId(), title));
+        previewMenu.add(new PlayerPreview(inventory, rewards, player.getUniqueId(), title, typePreview, opening));
 
     }
 
     @EventHandler
     public void onClick(InventoryClickEvent event){
         if(event.getClickedInventory() == null) return;
+        Player player = (Player) event.getWhoClicked();
+        UUID playerId = player.getUniqueId();
 
         PlayerPreview previewRewards = previewMenu.stream().filter(c->c.getUUID().equals(event.getWhoClicked().getUniqueId())).findFirst().orElse(null);
         if(previewRewards == null) return;
@@ -119,13 +168,43 @@ public class PreviewRewards implements Listener {
                     String rewardName = item.getItemMeta().getPersistentDataContainer().get(NameSpaceUtils.rewardName, PersistentDataType.STRING);
                     for(ItemReward itemReward : previewRewards.getRewardList()){
                         if(itemReward.getName().equalsIgnoreCase(rewardName)){
-                            if(itemReward.getDisabledPlayers().contains(event.getWhoClicked().getUniqueId())){
-                                itemReward.getDisabledPlayers().remove(event.getWhoClicked().getUniqueId());
-                            } else {
-                                itemReward.getDisabledPlayers().add(event.getWhoClicked().getUniqueId());
+                            if(previewRewards.getTypePreview() == TypePreview.CRATE) {
+
+                                String crateName = ((Crate) previewRewards.getOpening()).getName().toLowerCase(); // nombre del crate
+
+                                int disabledCount = (int) previewRewards.getRewardList().stream()
+                                        .filter(r -> r.getDisabledPlayers().contains(playerId))
+                                        .count();
+
+
+                                int maxAllowed = 0;
+                                for (PermissionAttachmentInfo permInfo : player.getEffectivePermissions()) {
+                                    String perm = permInfo.getPermission();
+                                    if (perm.toLowerCase().startsWith(crateName + ".disable.")) {
+                                        try {
+                                            int val = Integer.parseInt(perm.substring((crateName + ".disable.").length()));
+                                            if (val > maxAllowed) maxAllowed = val;
+                                        } catch (NumberFormatException ignored) {}
+                                    }
+                                }
+
+                                boolean isCurrentlyDisabled = itemReward.getDisabledPlayers().contains(playerId);
+
+                                if (isCurrentlyDisabled) {
+                                    itemReward.getDisabledPlayers().remove(playerId);
+                                } else {
+                                    if (disabledCount < maxAllowed || player.isOp()) {
+                                        itemReward.getDisabledPlayers().add(playerId);
+                                    } else {
+                                        player.sendMessage(ChatColor.RED + "¡You have reached the limit of disabled rewards for this crate (" + maxAllowed + ")!");
+                                        return;
+                                    }
+                                }
+
+
+                                onPreview(player, previewRewards.getRewardList(), previewRewards.getTitle(), previewRewards.getTypePreview(), previewRewards.getOpening());
+
                             }
-                            Player player = (Player) event.getWhoClicked();
-                            onPreview(player, previewRewards.getRewardList(), previewRewards.getTitle());
                         }
                     }
                 }

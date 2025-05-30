@@ -1,12 +1,12 @@
 package com.venned.simplecrates.listeners.crate;
 
 import com.venned.simplecrates.Main;
-import com.venned.simplecrates.build.Crate;
-import com.venned.simplecrates.build.CrateBlock;
+import com.venned.simplecrates.build.crate.Crate;
+import com.venned.simplecrates.build.crate.CrateBlock;
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.player.PlayerData;
 import com.venned.simplecrates.gui.preview.PreviewRewards;
-import com.venned.simplecrates.manager.CrateBlockManager;
+import com.venned.simplecrates.manager.crate.CrateBlockManager;
 import com.venned.simplecrates.manager.player.PlayerManager;
 import com.venned.simplecrates.utils.NameSpaceUtils;
 import org.bukkit.Bukkit;
@@ -38,6 +38,8 @@ public class PlayerCrateListener implements Listener {
         this.previewRewards = previewRewards;
     }
 
+
+
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if(event.getClickedBlock() == null) return;
@@ -52,8 +54,7 @@ public class PlayerCrateListener implements Listener {
             if (event.getAction() == Action.LEFT_CLICK_BLOCK && !event.getPlayer().isSneaking()) {
                 event.setCancelled(true);
                 String title = crateBlock.getCrate().getPreviewTitle().replace("&", "§");
-
-                previewRewards.onPreview(event.getPlayer(), crateBlock.getCrate().getRewards(), title);
+                previewRewards.onPreview(event.getPlayer(), crateBlock.getCrate().getRewards(), title, PreviewRewards.TypePreview.CRATE, crateBlock.getCrate());
             } else if (event.getHand() == EquipmentSlot.HAND) {
                 if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                     event.setCancelled(true);
@@ -66,10 +67,24 @@ public class PlayerCrateListener implements Listener {
 
                                 if(event.getPlayer().isSneaking()){
 
-                                    int amount_keys = itemStack.getAmount();
-                                    openAllKeys(event.getPlayer(), crateBlock.getCrate(), amount_keys);
+                                    int amount = 0;
 
-                                    itemStack.setAmount(0);
+                                    for(ItemStack keys : event.getPlayer().getInventory().getStorageContents()){
+                                        if(keys == null) continue;
+                                        if(keys.isSimilar(itemStack)){
+                                            amount += keys.getAmount();
+                                        }
+                                    }
+
+                                    for(ItemStack removed : event.getPlayer().getInventory().getStorageContents()){
+                                        if(removed == null) continue;
+                                        if(removed.isSimilar(itemStack)){
+                                            event.getPlayer().getInventory().remove(removed);
+                                        }
+                                    }
+
+                                    openAllKeys(event.getPlayer(), crateBlock.getCrate(), amount);
+
                                     return;
                                 }
 
@@ -117,9 +132,15 @@ public class PlayerCrateListener implements Listener {
                     ItemReward reward = getWeightedRandomReward(availableRewards, totalWeight, random);
                     if (reward != null) {
                         rewardsWon.add(reward);
-                        player.getInventory().addItem(reward.getItemStack());
-                        for (String command : reward.getCommands()) {
-                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("{player}", player.getName()));
+                        PlayerData playerData = Main.getInstance().getPlayerManager().getPlayerData(player);
+
+                        if(playerData == null) return;
+
+                        if(!playerData.getDisabledReward().contains(reward.getItemStack())) {
+                            player.getInventory().addItem(reward.getItemStack());
+                            for (String command : reward.getCommands()) {
+                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("{player}", player.getName()));
+                            }
                         }
                     }
                 }
@@ -157,9 +178,6 @@ public class PlayerCrateListener implements Listener {
                 }
             }
         }
-
-
-
     }
 
     private ItemReward getWeightedRandomReward(List<ItemReward> rewards, double totalWeight, Random random) {

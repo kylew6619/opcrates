@@ -1,6 +1,6 @@
 package com.venned.simplecrates.commands;
 
-import com.venned.simplecrates.manager.LootBoxManager;
+import com.venned.simplecrates.manager.lootbox.LootBoxManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;

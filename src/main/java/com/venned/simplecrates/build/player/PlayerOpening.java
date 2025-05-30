@@ -1,6 +1,6 @@
 package com.venned.simplecrates.build.player;
 
-import com.venned.simplecrates.build.Crate;
+import com.venned.simplecrates.build.crate.Crate;
 import com.venned.simplecrates.build.ItemReward;
 import org.bukkit.scheduler.BukkitTask;
 

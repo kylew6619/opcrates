@@ -3,7 +3,7 @@ package com.venned.simplecrates.commands;
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.LootBox;
 import com.venned.simplecrates.gui.edit.EditChances;
-import com.venned.simplecrates.manager.LootBoxManager;
+import com.venned.simplecrates.manager.lootbox.LootBoxManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
@@ -97,7 +97,8 @@ public class LootBoxCommand implements CommandExecutor {
                         return true;
                     }
 
-                    ItemReward itemReward = new ItemReward(reward, player.getInventory().getItemInMainHand().clone(), 10, new ArrayList<>(), true, new ArrayList<>());
+                    ItemReward itemReward = new ItemReward(reward, player.getInventory().getItemInMainHand().clone(), 10, new ArrayList<>(), true, new ArrayList<>(), false,
+                            "&aYou won ! : {item_reward}");
                     lootBox.addReward(itemReward);
                     player.playSound(player, Sound.BLOCK_NOTE_BLOCK_BELL, 1, 1);
                     player.sendMessage("§c§l(!) §dLootBox " + name + " item added successfully");

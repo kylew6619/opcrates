@@ -13,14 +13,36 @@ public class ItemReward {
     String name;
     boolean visible;
     List<UUID> disabledPlayers;
+    boolean glow;
+    String messageWon;
 
-    public ItemReward(String name, ItemStack itemStack, double chance, List<String> commands, boolean visible, List<UUID> disabledPlayers) {
+    public ItemReward(String name, ItemStack itemStack, double chance, List<String> commands, boolean visible, List<UUID> disabledPlayers, boolean glow, String messageWin) {
         this.name = name;
         this.itemStack = itemStack;
         this.chance = chance;
         this.commands = commands;
         this.visible = visible;
         this.disabledPlayers = disabledPlayers;
+        this.glow = glow;
+        this.messageWon = messageWin;
+
+    }
+
+
+    public void setMessageWon(String messageWon) {
+        this.messageWon = messageWon;
+    }
+
+    public String getMessageWon() {
+        return messageWon;
+    }
+
+    public void setGlow(boolean glow) {
+        this.glow = glow;
+    }
+
+    public boolean isGlow() {
+        return glow;
     }
 
     public List<UUID> getDisabledPlayers() {

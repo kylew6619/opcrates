@@ -1,6 +1,7 @@
 package com.venned.simplecrates.build;
 
 import com.venned.simplecrates.Main;
+import com.venned.simplecrates.build.player.PlayerData;
 import com.venned.simplecrates.interfaces.Opening;
 import com.venned.simplecrates.utils.HologramAnimationUtils;
 import com.venned.simplecrates.utils.HologramTextUtils;
@@ -30,15 +31,18 @@ public class LootBox implements Opening {
     List<String> announcementStart;
     boolean announce;
 
-    public LootBox(String name, List<ItemReward> rewards, String displayName, int max_reward, List<String> lore, String titlePreview, List<String> announcementFinish, List<String> announcementStart, boolean announce) {
+    Material material;
+
+    public LootBox(String name, List<ItemReward> rewards, String displayName, int max_reward, List<String> lore, String titlePreview, List<String> announcementFinish, List<String> announcementStart, boolean announce, Material material) {
         this.name = name;
         this.rewards = rewards;
         this.displayName = displayName;
         this.max_reward = max_reward;
         this.loreS = lore;
         this.titlePreview = titlePreview;
+        this.material = material;
 
-        ItemStack itemStack = new ItemStack(Material.SHULKER_BOX);
+        ItemStack itemStack = new ItemStack(material);
         ItemMeta itemMeta = itemStack.getItemMeta();
 
         List<String> newLore = new ArrayList<>();
@@ -62,6 +66,8 @@ public class LootBox implements Opening {
         this.rewards = rewards;
         this.displayName = displayName;
         this.max_reward = 3;
+
+        this.material = Material.SHULKER_BOX;
 
         ItemStack itemStack = new ItemStack(Material.SHULKER_BOX);
         ItemMeta itemMeta = itemStack.getItemMeta();
@@ -88,11 +94,18 @@ public class LootBox implements Opening {
         this.announcementFinish = announce;
 
         List<String> announceStart = new ArrayList<>();
-        announce.add("&dOpening Crate " + this.getDisplayName());
-        announce.add("{player}");
 
         this.announcementStart = announceStart;
         this.announce = true;
+    }
+
+
+    public void setMaterial(Material material) {
+        this.material = material;
+    }
+
+    public Material getMaterial() {
+        return material;
     }
 
     public void open(Player player) {
@@ -108,11 +121,18 @@ public class LootBox implements Opening {
             HologramTextUtils.textReward(player, open, selectedRewards, ChatColor.translateAlternateColorCodes('&', displayName));
 
             for (ItemReward itemReward : selectedRewards) {
-                player.getInventory().addItem(itemReward.getItemStack().clone());
-                if (!itemReward.getCommands().isEmpty()) {
-                    for (String command : itemReward.getCommands()) {
-                        command = command.replace("{player}", player.getName());
-                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+
+                PlayerData playerData = Main.getInstance().getPlayerManager().getPlayerData(player);
+
+                if(playerData == null) return;
+
+                if(!playerData.getDisabledReward().contains(itemReward.getItemStack())) {
+                    player.getInventory().addItem(itemReward.getItemStack().clone());
+                    if (!itemReward.getCommands().isEmpty()) {
+                        for (String command : itemReward.getCommands()) {
+                            command = command.replace("{player}", player.getName());
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                        }
                     }
                 }
             }
