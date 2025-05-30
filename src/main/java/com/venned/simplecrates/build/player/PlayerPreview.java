@@ -1,6 +1,8 @@
 package com.venned.simplecrates.build.player;
 
 import com.venned.simplecrates.build.ItemReward;
+import com.venned.simplecrates.gui.preview.PreviewRewards;
+import com.venned.simplecrates.interfaces.Opening;
 import org.bukkit.inventory.Inventory;
 
 import java.util.List;
@@ -12,12 +14,28 @@ public class PlayerPreview {
     List<ItemReward> rewardList;
     UUID uuid;
     String title;
+    PreviewRewards.TypePreview typePreview;
+    Opening opening;
 
-    public PlayerPreview(Inventory inventory, List<ItemReward> rewardList, UUID uuid, String title) {
+    public PlayerPreview(Inventory inventory, List<ItemReward> rewardList, UUID uuid, String title, PreviewRewards.TypePreview typePreview, Opening opening) {
         this.inventory = inventory;
         this.rewardList = rewardList;
         this.uuid = uuid;
         this.title = title;
+        this.typePreview = typePreview;
+        this.opening = opening;
+    }
+
+    public Opening getOpening() {
+        return opening;
+    }
+
+    public void setTypePreview(PreviewRewards.TypePreview typePreview) {
+        this.typePreview = typePreview;
+    }
+
+    public PreviewRewards.TypePreview getTypePreview() {
+        return typePreview;
     }
 
     public String getTitle() {

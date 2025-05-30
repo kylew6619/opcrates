@@ -7,13 +7,15 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
+import java.util.ArrayList;
+
 public class PlayerJoinListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         PlayerManager manager = Main.getInstance().getPlayerManager();
         if(manager.getPlayerDatas().stream().noneMatch(u->u.getUUID().equals(event.getPlayer().getUniqueId()))) {
-            PlayerData playerData = new PlayerData(event.getPlayer().getUniqueId(), true, false);
+            PlayerData playerData = new PlayerData(event.getPlayer().getUniqueId(), true, false, new ArrayList<>());
             manager.getPlayerDatas().add(playerData);
         }
     }

@@ -1,36 +1,38 @@
 package com.venned.simplecrates.manager.lootbox;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.venned.simplecrates.Main;
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.LootBox;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 public class LootBoxManager {
 
     private final Set<LootBox> lootBoxes = new HashSet<>();
-    private final File lootBoxFile;
-    private FileConfiguration lootBoxConfig;
+    private final File lootBoxFolder;
 
     public LootBoxManager() {
-        lootBoxFile = new File(Main.getInstance().getDataFolder(), "lootbox.yml");
+        lootBoxFolder = new File(Main.getInstance().getDataFolder(), "lootboxes");
 
-        if (!lootBoxFile.exists()) {
-            try {
-                lootBoxFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        if (!lootBoxFolder.exists()) {
+            lootBoxFolder.mkdirs();
         }
 
-        lootBoxConfig = YamlConfiguration.loadConfiguration(lootBoxFile);
         loadLootBoxes();
     }
 
@@ -40,132 +42,135 @@ public class LootBoxManager {
 
     public void addLootBox(LootBox lootBox) {
         lootBoxes.add(lootBox);
-        saveLootBoxes();
+        saveLootBoxToFile(lootBox);
     }
 
-    public void reloadAll(){
-        lootBoxConfig = YamlConfiguration.loadConfiguration(lootBoxFile);
-
+    public void reloadAll() {
+        lootBoxes.clear();
         loadLootBoxes();
     }
-
     public void refreshAll(){
-        saveLootBoxes();
+        saveAll();
     }
 
-    public void saveLootBoxes() {
-        lootBoxConfig.set("lootboxes", null);
-
+    public void saveAll() {
         for (LootBox lootBox : lootBoxes) {
-            String path = "lootboxes." + lootBox.getName();
-            lootBoxConfig.set(path + ".name", lootBox.getName());
-            lootBoxConfig.set(path + ".display_name", lootBox.getDisplayName());
-            lootBoxConfig.set(path + ".max_reward", lootBox.getMax_reward());
-            lootBoxConfig.set(path + ".lore", lootBox.getLoreS());
-            lootBoxConfig.set(path + ".titlePreview", lootBox.getTitlePreview());
-            lootBoxConfig.set(path + ".announce_status", lootBox.isAnnounceStatus());
-            lootBoxConfig.set(path + ".announce", lootBox.getAnnouncementFinish());
-            lootBoxConfig.set(path + ".announce_start", lootBox.getAnnouncementStart());
+            saveLootBoxToFile(lootBox);
+        }
+    }
 
+    private void saveLootBoxToFile(LootBox lootBox) {
+        File file = new File(lootBoxFolder, lootBox.getName() + ".yml");
+        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
 
+        config.set("name", lootBox.getName());
+        config.set("material", lootBox.getMaterial().name());
+        config.set("display_name", lootBox.getDisplayName());
+        config.set("max_reward", lootBox.getMax_reward());
+        config.set("lore", lootBox.getLoreS());
+        config.set("titlePreview", lootBox.getTitlePreview());
+        config.set("announce_status", lootBox.isAnnounceStatus());
+        config.set("announce", lootBox.getAnnouncementFinish());
+        config.set("announce_start", lootBox.getAnnouncementStart());
 
-            List<Map<String, Object>> rewardList = new ArrayList<>();
-            for (ItemReward reward : lootBox.getRewards()) {
-                Map<String, Object> rewardMap = new HashMap<>();
-                rewardMap.put("name", reward.getName());
-                rewardMap.put("chance", reward.getChance());
-                rewardMap.put("item", serializeItemStack(reward.getItemStack()));
-                rewardMap.put("commands", reward.getCommands());
-                rewardMap.put("visible", reward.isVisible());
+        List<Map<String, Object>> rewardList = new ArrayList<>();
+        for (ItemReward reward : lootBox.getRewards()) {
+            Map<String, Object> rewardMap = new HashMap<>();
+            rewardMap.put("name", reward.getName());
+            rewardMap.put("chance", reward.getChance());
+            rewardMap.put("item", serializeItemStack(reward.getItemStack()));
+            rewardMap.put("commands", reward.getCommands());
+            rewardMap.put("visible", reward.isVisible());
+            rewardMap.put("glow", reward.isGlow());
+            rewardMap.put("message_win", reward.getMessageWon());
 
-                rewardList.add(rewardMap);
-            }
-
-            lootBoxConfig.set(path + ".rewards", rewardList);
+            rewardList.add(rewardMap);
         }
 
+        config.set("rewards", rewardList);
+
         try {
-            lootBoxConfig.save(lootBoxFile);
+            config.save(file);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void loadLootBoxes() {
-        lootBoxes.clear();
+    private void loadLootBoxes() {
+        if (!lootBoxFolder.exists()) return;
 
-        if (!lootBoxConfig.contains("lootboxes")) return;
+        File[] files = lootBoxFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+        if (files == null) return;
 
-        ConfigurationSection section = lootBoxConfig.getConfigurationSection("lootboxes");
-        if (section == null) return;
+        for (File file : files) {
+            FileConfiguration config = YamlConfiguration.loadConfiguration(file);
 
-        for (String key : section.getKeys(false)) {
-            String name = section.getString(key + ".name");
+            try {
+                String name = config.getString("name");
+                String displayName = config.getString("display_name", name);
+                int maxReward = config.getInt("max_reward");
+                Material material = Material.valueOf(config.getString("material", "CHEST"));
+                String titlePreview = config.getString("titlePreview", "");
+                List<String> lore = config.getStringList("lore");
+                List<String> announce = config.getStringList("announce");
+                List<String> announceStart = config.getStringList("announce_start");
+                boolean announceStatus = config.getBoolean("announce_status");
 
-            String displayName = section.getString(key + ".display_name");
-            if(displayName == null){
-                displayName = name;
+                List<ItemReward> rewards = new ArrayList<>();
+                List<Map<?, ?>> rewardList = config.getMapList("rewards");
+
+                for (Map<?, ?> rewardMap : rewardList) {
+                    String rewardName = (String) rewardMap.get("name");
+                    double chance = (double) rewardMap.get("chance");
+                    List<String> commands = (List<String>) rewardMap.get("commands");
+                    ItemStack itemStack = deserializeItemStack((Map<String, Object>) rewardMap.get("item"));
+                    boolean visible = (boolean) rewardMap.get("visible");
+                    boolean glow = (boolean) rewardMap.get("glow");
+                    String messageWin = (String) rewardMap.get("message_win");
+
+                    rewards.add(new ItemReward(rewardName, itemStack, chance, commands, visible, new ArrayList<>(), glow, messageWin));
+                }
+
+                lootBoxes.add(new LootBox(name, rewards, displayName, maxReward, lore, titlePreview, announce, announceStart, announceStatus, material));
+
+            } catch (Exception e) {
+                System.err.println("Failed to load lootbox file: " + file.getName());
+                e.printStackTrace();
             }
-
-            int max_reward = section.getInt(key + ".max_reward");
-
-            String titlePreview = section.getString(key + ".titlePreview");
-
-            List<String> lore = section.getStringList(key + ".lore");
-
-            List<String> announce = section.getStringList(key + ".announce");
-
-            boolean announceStatus = section.getBoolean(key + ".announce_status");
-
-            List<String> announceStart = section.getStringList(key + ".announce_start");
-
-            List<ItemReward> rewards = new ArrayList<>();
-            List<Map<?, ?>> rewardList = section.getMapList(key + ".rewards");
-
-            for (Map<?, ?> rewardMap : rewardList) {
-                String rewardName = (String) rewardMap.get("name");
-                double chance = (double) rewardMap.get("chance");
-
-                List<String> commands = (List<String>) rewardMap.get("commands");
-                ItemStack itemStack = deserializeItemStack((Map<String, Object>) rewardMap.get("item"));
-
-                boolean visible = (boolean) rewardMap.get("visible");
-                rewards.add(new ItemReward(rewardName, itemStack, chance, commands, visible, new ArrayList<>()));
-            }
-
-            lootBoxes.add(new LootBox(name, rewards, displayName, max_reward, lore, titlePreview, announce, announceStart, announceStatus));
         }
     }
 
     private Map<String, Object> serializeItemStack(ItemStack item) {
         if (item == null) return null;
-
-        Map<String, Object> data = new HashMap<>(item.serialize()); // Convertir a HashMap para modificar
+        Map<String, Object> data = new HashMap<>(item.serialize());
 
         if (item.hasItemMeta()) {
             ItemMeta meta = item.getItemMeta();
-            Map<String, Object> metaData = new HashMap<>(meta.serialize()); // Convertir a HashMap para modificar
+            Map<String, Object> metaData = new HashMap<>(meta.serialize());
 
             if (meta.hasDisplayName()) {
                 metaData.put("display-name", meta.getDisplayName().replace("§", "&"));
             }
 
             if (meta.hasLore()) {
-                List<String> formattedLore = meta.getLore().stream()
-                        .map(lore -> lore.replace("§", "&"))
-                        .collect(Collectors.toList());
+                List<String> formattedLore = meta.getLore().stream().map(l -> l.replace("§", "&")).collect(Collectors.toList());
                 metaData.put("lore", formattedLore);
             }
 
-            data.put("meta", metaData); // Reemplazar los metadatos en la estructura original
+            data.put("meta", metaData);
+
         }
+
+        data.remove("v");
 
         return data;
     }
 
-
     private ItemStack deserializeItemStack(Map<String, Object> data) {
         if (data == null) return null;
+
+
+        data.put("v", Bukkit.getUnsafe().getDataVersion());
 
         ItemStack item = ItemStack.deserialize(data);
 
@@ -182,6 +187,30 @@ public class LootBoxManager {
                         .map(lore -> lore.replace("&", "§"))
                         .collect(Collectors.toList());
                 meta.setLore(formattedLore);
+            }
+
+
+            if (metaData.containsKey("PublicBukkitValues")) {
+                Object publicBukkitValuesRaw = metaData.get("PublicBukkitValues");
+                if (publicBukkitValuesRaw instanceof String) {
+                    try {
+                        JsonObject publicBukkitJson = JsonParser.parseString((String) publicBukkitValuesRaw).getAsJsonObject();
+                        for (Map.Entry<String, JsonElement> entry : publicBukkitJson.entrySet()) {
+                            String keyRaw = entry.getKey(); // e.g. "simplecrates:key"
+                            JsonElement valueElement = entry.getValue();
+
+                            String[] namespaceSplit = keyRaw.split(":");
+                            if (namespaceSplit.length == 2) {
+                                System.out.println("Colocndo meta " + namespaceSplit[0]  + namespaceSplit[1]);
+                                NamespacedKey key = new NamespacedKey(namespaceSplit[0], namespaceSplit[1]);
+                                meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, valueElement.getAsString());
+                            }
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        System.out.println("Error parsing PublicBukkitValues: " + publicBukkitValuesRaw);
+                    }
+                }
             }
 
             item.setItemMeta(meta);

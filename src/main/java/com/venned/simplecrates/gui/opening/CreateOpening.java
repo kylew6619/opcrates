@@ -78,23 +78,34 @@ public class CreateOpening {
                             .findFirst().orElse(null);
 
                     if (wonItem != null && wonItem.getType() != Material.AIR) {
-                        String itemName;
 
-                        if (wonItem.getItemMeta() != null && wonItem.getItemMeta().hasDisplayName()) {
-                            itemName = wonItem.getItemMeta().getDisplayName();
-                        } else {
-                            itemName = wonItem.getType().toString().replace("_", " ").toLowerCase();
-                        }
+                        PlayerData playerData = Main.getInstance().getPlayerManager().getPlayerData(player);
 
-                        player.getInventory().addItem(wonItem);
-                        player.sendMessage(Main.getMessage("crate_win_item", Map.of("item_reward", itemReward.getName())));
-                        rewardsWin.add(itemReward);
-                        playerOpening.getRewardsAlready().add(itemReward);
+                        if(playerData == null) return;
 
-                        if (!itemReward.getCommands().isEmpty()) {
-                            for (String command : itemReward.getCommands()) {
-                                command = command.replace("{player}", player.getName());
-                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                        if(!playerData.getDisabledReward().contains(wonItem)) {
+
+                            String itemName;
+
+                            if (wonItem.getItemMeta() != null && wonItem.getItemMeta().hasDisplayName()) {
+                                itemName = wonItem.getItemMeta().getDisplayName();
+                            } else {
+                                itemName = wonItem.getType().toString().replace("_", " ").toLowerCase();
+                            }
+
+                            player.getInventory().addItem(wonItem);
+
+
+                            player.sendMessage(Main.getMessageItem(itemReward.getMessageWon(), Map.of("item_reward", itemReward.getName())));
+                            //       player.sendMessage(Main.getMessage("crate_win_item", Map.of("item_reward", itemReward.getName())));
+                            rewardsWin.add(itemReward);
+                            playerOpening.getRewardsAlready().add(itemReward);
+
+                            if (!itemReward.getCommands().isEmpty()) {
+                                for (String command : itemReward.getCommands()) {
+                                    command = command.replace("{player}", player.getName());
+                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                                }
                             }
                         }
                     }

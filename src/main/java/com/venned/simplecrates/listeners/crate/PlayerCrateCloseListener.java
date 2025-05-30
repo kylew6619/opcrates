@@ -47,9 +47,18 @@ public class PlayerCrateCloseListener implements Listener {
                     ItemReward reward = getWeightedRandomReward(availableRewards, totalWeight, random);
                     if (reward != null) {
                         rewardsWon.add(reward);
-                        player.getInventory().addItem(reward.getItemStack());
-                        for (String command : reward.getCommands()) {
-                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("{player}", player.getName()));
+
+                        PlayerData playerData = Main.getInstance().getPlayerManager().getPlayerData(player);
+
+                        if(playerData == null) return;
+
+                        if(!playerData.getDisabledReward().contains(reward.getItemStack())) {
+
+
+                            player.getInventory().addItem(reward.getItemStack());
+                            for (String command : reward.getCommands()) {
+                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("{player}", player.getName()));
+                            }
                         }
                     }
                 }

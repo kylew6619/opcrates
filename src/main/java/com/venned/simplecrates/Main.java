@@ -2,13 +2,18 @@ package com.venned.simplecrates;
 
 import com.venned.simplecrates.commands.LootBoxCommand;
 import com.venned.simplecrates.commands.LootBoxTabCompleter;
+import com.venned.simplecrates.commands.LootboxesCommand;
 import com.venned.simplecrates.commands.backpack.BackPackCommand;
 import com.venned.simplecrates.commands.crates.CrateCommand;
+import com.venned.simplecrates.commands.crates.CratesCommand;
+import com.venned.simplecrates.commands.filter.FilterCommand;
 import com.venned.simplecrates.gui.backpack.BackPackGUI;
 import com.venned.simplecrates.gui.edit.EditChances;
 import com.venned.simplecrates.gui.edit.EditOptions;
+import com.venned.simplecrates.gui.filter.FilterMenu;
 import com.venned.simplecrates.gui.listener.EditListener;
 import com.venned.simplecrates.gui.preview.PreviewRewards;
+import com.venned.simplecrates.listeners.PlaceKeyLootListener;
 import com.venned.simplecrates.listeners.backpack.PlayerReceivedKeyListener;
 import com.venned.simplecrates.listeners.crate.PlayerCrateCloseListener;
 import com.venned.simplecrates.listeners.crate.PlayerCrateListener;
@@ -55,6 +60,9 @@ public final class Main extends JavaPlugin implements Listener {
         crateBlockManager = new CrateBlockManager(this, crateManager);
         editChances = new EditChances();
         editOptions = new EditOptions();
+
+        new FilterMenu();
+
         previewRewards = new PreviewRewards(this);
         playerManager = new PlayerManager(this, crateManager);
 
@@ -67,7 +75,7 @@ public final class Main extends JavaPlugin implements Listener {
 
 
 
-        Bukkit.getScheduler().runTaskTimer(this, playerManager::saveAllPlayers, 200, 200);
+        Bukkit.getScheduler().runTaskTimer(this, playerManager::saveAllPlayers, 100, 100);
 
         new HologramChestTask().runTaskTimer(this, 20, 120);
 
@@ -75,12 +83,13 @@ public final class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        lootBoxManager.saveLootBoxes();
+        lootBoxManager.saveAll();
         crateManager.saveCrates();
         crateBlockManager.saveCrates();
     }
 
     void loadListeners(){
+        getServer().getPluginManager().registerEvents(new PlaceKeyLootListener(), this);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new EditListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerLootBoxListener(lootBoxManager, previewRewards), this);
@@ -92,15 +101,36 @@ public final class Main extends JavaPlugin implements Listener {
     }
 
     void loadCommands(){
+        getCommand("filtercrates").setExecutor(new FilterCommand());
+
+        getCommand("lootboxes").setExecutor(new LootboxesCommand());
+        getCommand("crates").setExecutor(new CratesCommand());
         getCommand("lootbox").setExecutor(new LootBoxCommand(lootBoxManager, editChances));
         getCommand("lootbox").setTabCompleter(new LootBoxTabCompleter(lootBoxManager));
         getCommand("crate").setExecutor(new CrateCommand(crateManager, editChances, crateBlockManager, playerManager));
-        getCommand("keybp").setExecutor(new BackPackCommand(playerManager, backPackConfig, crateManager, backPackGUI));
+        getCommand("backpack").setExecutor(new BackPackCommand(playerManager, backPackConfig, crateManager, backPackGUI));
     }
 
+    public CrateManager getCrateManager() {
+        return crateManager;
+    }
+
+    public LootBoxManager getLootBoxManager() {
+        return lootBoxManager;
+    }
 
     public static String getMessage(String key, Map<String, String> placeholders) {
         String message = Main.getInstance().getConfig().getString("messages." + key, "&cMessage not found: " + key);
+
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+            message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+        }
+
+        return ChatColor.translateAlternateColorCodes('&', message);
+    }
+
+    public static String getMessageItem(String key, Map<String, String> placeholders) {
+        String message = key;
 
         for (Map.Entry<String, String> entry : placeholders.entrySet()) {
             message = message.replace("{" + entry.getKey() + "}", entry.getValue());

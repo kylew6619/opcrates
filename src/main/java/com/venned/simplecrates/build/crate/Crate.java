@@ -16,6 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Crate implements Opening {
 
@@ -68,6 +69,92 @@ public class Crate implements Opening {
         this.announcementStart = announcementStart;
         this.announce = announce;
 
+    }
+
+    public List<ItemReward> rollRewards() {
+        List<ItemReward> result = new ArrayList<>();
+        int count = getMax_reward();
+        List<ItemReward> possible = getRewards();
+
+        for (int i = 0; i < count; i++) {
+            result.add(possible.get(ThreadLocalRandom.current().nextInt(possible.size())));
+        }
+
+        return result;
+    }
+
+
+    public boolean isSimilarKey(ItemStack item){
+
+        ItemStack target = this.itemKey.clone();
+
+        if (item == null || target == null) return false;
+
+        if (item.getType() != target.getType()) return false;
+
+        ItemMeta itemMeta = item.getItemMeta();
+        ItemMeta targetMeta = target.getItemMeta();
+
+        if (itemMeta == null && targetMeta == null) return false;
+
+
+        if ((itemMeta == null) != (targetMeta == null)) return false;
+
+        if (itemMeta.hasDisplayName() != targetMeta.hasDisplayName()) return false;
+        if (itemMeta.hasDisplayName()) {
+            if (!itemMeta.getDisplayName().equals(targetMeta.getDisplayName())) return false;
+        }
+
+
+        if (itemMeta.hasLore() != targetMeta.hasLore()) return false;
+        if (itemMeta.hasLore()) {
+            List<String> itemLore = itemMeta.getLore();
+            List<String> targetLore = targetMeta.getLore();
+            if (itemLore.size() != targetLore.size()) return false;
+            for (int i = 0; i < itemLore.size(); i++) {
+                if (!itemLore.get(i).equals(targetLore.get(i))) return false;
+            }
+        }
+
+
+        return true;
+    }
+
+    public boolean isSimilarCrate(ItemStack item){
+
+
+        ItemStack target = this.item.clone();
+
+        if (item == null || target == null) return false;
+
+        if (item.getType() != target.getType()) return false;
+
+        ItemMeta itemMeta = item.getItemMeta();
+        ItemMeta targetMeta = target.getItemMeta();
+
+        if (itemMeta == null && targetMeta == null) return false;
+
+
+        if ((itemMeta == null) != (targetMeta == null)) return false;
+
+        if (itemMeta.hasDisplayName() != targetMeta.hasDisplayName()) return false;
+        if (itemMeta.hasDisplayName()) {
+            if (!itemMeta.getDisplayName().equals(targetMeta.getDisplayName())) return false;
+        }
+
+
+        if (itemMeta.hasLore() != targetMeta.hasLore()) return false;
+        if (itemMeta.hasLore()) {
+            List<String> itemLore = itemMeta.getLore();
+            List<String> targetLore = targetMeta.getLore();
+            if (itemLore.size() != targetLore.size()) return false;
+            for (int i = 0; i < itemLore.size(); i++) {
+                if (!itemLore.get(i).equals(targetLore.get(i))) return false;
+            }
+        }
+
+
+        return true;
     }
 
     public Crate(String name, List<ItemReward> rewards, String displayName) {

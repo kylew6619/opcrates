@@ -55,9 +55,9 @@ public class BackPackConfig {
 
     public void loadConfig(){
 
-        enabled = backPackConfig.getBoolean("enabled");
-        autoPickup = backPackConfig.getBoolean("autoPickup");
-        allow_withdraw = backPackConfig.getBoolean("allow_withdraw");
+        enabled = backPackConfig.getBoolean("key_backpacks.enabled");
+        autoPickup = backPackConfig.getBoolean("key_backpacks.autoPickup");
+        allow_withdraw = backPackConfig.getBoolean("key_backpacks.allow_withdraw");
 
         disabledWorlds.clear();
         List<String> worlds = backPackConfig.getStringList("key_backpacks.disable_in_worlds");
@@ -124,10 +124,12 @@ public class BackPackConfig {
         backPackConfig = new YamlConfiguration();
 
         backPackConfig.set("key_backpacks.enabled", true);
-        backPackConfig.set("key_backpacks.auto_pickup", true);
+        backPackConfig.set("key_backpacks.autoPickup", true);
         backPackConfig.set("key_backpacks.allow_withdraw", true);
         backPackConfig.set("key_backpacks.tradeable", false);
         backPackConfig.set("key_backpacks.disable_in_worlds", List.of("hub", "event"));
+        backPackConfig.set("lore-add", Arrays.asList("&9Left-Click to %action% 1000 item", "&9Left-Click to %action% 1000 item", "&9Left-Click to %action% 1000 item",
+                "&8Shift-Left-Click to %action% 100 item", "&9Shift-Right-Click to %action% all"));
 
 
         backPackConfig.set("gui.title", "&6&lYour Key Backpack");
@@ -139,8 +141,17 @@ public class BackPackConfig {
         layout.put("2", "legendary");
         layout.put("3", "mythic");
         layout.put("8", "close_button");
+        layout.put("10", "change_mode");
 
         backPackConfig.set("gui.layout", layout);
+
+        backPackConfig.set("items.change_mode.display_name", "&cChange Mode");
+        backPackConfig.set("items.change_mode.material", "STONE");
+        backPackConfig.set("items.change_mode.lore", List.of("&cClick change mode"));
+
+        backPackConfig.set("items.close_button.display_name", "&cClose Button");
+        backPackConfig.set("items.close_button.material", "BARRIER");
+        backPackConfig.set("items.close_button.lore", List.of("&cClick change mode"));
 
         backPackConfig.set("keys.vote.display_name", "&aVote Key");
         backPackConfig.set("keys.vote.material", "TRIPWIRE_HOOK");
@@ -164,6 +175,14 @@ public class BackPackConfig {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean isAutoPickup() {
+        return autoPickup;
+    }
+
+    public boolean isAllow_withdraw() {
+        return allow_withdraw;
     }
 
     public List<BackPackKey> getKeys() {

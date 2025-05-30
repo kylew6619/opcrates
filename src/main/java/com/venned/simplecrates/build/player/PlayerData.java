@@ -1,7 +1,10 @@
 package com.venned.simplecrates.build.player;
 
 import com.venned.simplecrates.build.BackPack;
+import com.venned.simplecrates.build.crate.Crate;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.UUID;
 
 public class PlayerData {
@@ -11,10 +14,17 @@ public class PlayerData {
     BackPack backPack;
     boolean autoPickUpKey;
 
-    public PlayerData(UUID uuid, boolean notifiedReward, boolean autoPickUpKey) {
+    List<ItemStack> disabledReward;
+
+    public PlayerData(UUID uuid, boolean notifiedReward, boolean autoPickUpKey, List<ItemStack> disabledReward) {
         this.uuid = uuid;
         this.notifiedReward = notifiedReward;
         this.autoPickUpKey = autoPickUpKey;
+        this.disabledReward = disabledReward;
+    }
+
+    public List<ItemStack> getDisabledReward() {
+        return disabledReward;
     }
 
     public UUID getUUID() {

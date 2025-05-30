@@ -37,6 +37,7 @@ public class BackPackCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
         if(sender instanceof Player player) {
+
             if(args.length == 0) {
                 PlayerData playerData = playerManager.getPlayerData(player);
                 if(playerData == null) return true;
@@ -48,19 +49,35 @@ public class BackPackCommand implements CommandExecutor {
                 return true;
             }
 
+            if(!player.isOp()) return true;
+
             switch (args[0]){
                 case "reload":
+                    if(!player.isOp()) return true;
                     backPackConfig.reloadConfig();
                     return true;
-                case "add":
-                    PlayerData playerData = playerManager.getPlayerData(player);
+                case "give":
+                    if(!player.isOp()) return true;
+                    if(args.length  < 2) {
+                        player.sendMessage("Correct /backpack give <name>");
+                        return true;
+                    }
+
+                    Player target = Bukkit.getPlayer(args[1]);
+                    if(target == null) {
+                        player.sendMessage("Player not found");
+                        return true;
+                    }
+
+                    PlayerData playerData = playerManager.getPlayerData(target);
                     if(playerData == null) return true;
                     if(playerData.getBackPack() != null){
-                        player.sendMessage("you already have a backpack");
+                        player.sendMessage("Already BackPack");
                         return true;
                     }
                     playerData.setBackPack(new BackPack(new ArrayList<>()));
                     return true;
+                /*
                 case "toggle":
                     PlayerData playerData15 = playerManager.getPlayerData(player);
                     if(playerData15 == null) return true;
@@ -147,6 +164,7 @@ public class BackPackCommand implements CommandExecutor {
 
 
                 case "give":
+                    if(!player.isOp()) return true;
                     if(args.length < 3){
                         player.sendMessage("/backpack give <player> <type>");
                         return true;
@@ -198,6 +216,8 @@ public class BackPackCommand implements CommandExecutor {
                     }
 
                     return true;
+
+                 */
 
 
             }
