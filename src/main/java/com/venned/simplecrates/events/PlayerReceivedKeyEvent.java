@@ -1,6 +1,7 @@
 package com.venned.simplecrates.events;
 
 import com.venned.simplecrates.build.crate.Crate;
+import com.venned.simplecrates.interfaces.CrateInterface;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -12,10 +13,10 @@ public class PlayerReceivedKeyEvent extends Event implements Cancellable {
     private final Player player;
     private final ItemStack key;
     private final int amount;
-    private final Crate crate;
+    private final CrateInterface crate;
     boolean cancellable;
 
-    public PlayerReceivedKeyEvent(Player player, ItemStack keyType, int amount, Crate crate) {
+    public PlayerReceivedKeyEvent(Player player, ItemStack keyType, int amount, CrateInterface crate) {
         this.player = player;
         this.key = keyType;
         this.amount = amount;
@@ -24,7 +25,7 @@ public class PlayerReceivedKeyEvent extends Event implements Cancellable {
 
     }
 
-    public Crate getCrate() {
+    public CrateInterface getCrate() {
         return crate;
     }
 

@@ -7,12 +7,14 @@ import com.venned.simplecrates.commands.backpack.BackPackCommand;
 import com.venned.simplecrates.commands.crates.CrateCommand;
 import com.venned.simplecrates.commands.crates.CratesCommand;
 import com.venned.simplecrates.commands.filter.FilterCommand;
+import com.venned.simplecrates.commands.virtual.CrateVirtualCommand;
 import com.venned.simplecrates.gui.backpack.BackPackGUI;
 import com.venned.simplecrates.gui.edit.EditChances;
 import com.venned.simplecrates.gui.edit.EditOptions;
 import com.venned.simplecrates.gui.filter.FilterMenu;
 import com.venned.simplecrates.gui.listener.EditListener;
 import com.venned.simplecrates.gui.preview.PreviewRewards;
+import com.venned.simplecrates.gui.virtual.VirtualMenu;
 import com.venned.simplecrates.listeners.PlaceKeyLootListener;
 import com.venned.simplecrates.listeners.backpack.PlayerReceivedKeyListener;
 import com.venned.simplecrates.listeners.crate.PlayerCrateCloseListener;
@@ -20,11 +22,14 @@ import com.venned.simplecrates.listeners.crate.PlayerCrateListener;
 import com.venned.simplecrates.listeners.PlayerLootBoxListener;
 import com.venned.simplecrates.listeners.crate.PlayerCrateRemoveListener;
 import com.venned.simplecrates.listeners.data.PlayerJoinListener;
+import com.venned.simplecrates.listeners.virtual.PlayerInteractRewardListener;
+import com.venned.simplecrates.listeners.virtual.PlayerLeaveListener;
 import com.venned.simplecrates.manager.BackPackConfig;
 import com.venned.simplecrates.manager.crate.CrateBlockManager;
 import com.venned.simplecrates.manager.crate.CrateManager;
 import com.venned.simplecrates.manager.lootbox.LootBoxManager;
 import com.venned.simplecrates.manager.player.PlayerManager;
+import com.venned.simplecrates.manager.virtual.CrateVirtualManager;
 import com.venned.simplecrates.task.HologramChestTask;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -44,6 +49,7 @@ public final class Main extends JavaPlugin implements Listener {
     BackPackGUI backPackGUI;
     PreviewRewards previewRewards;
     CrateManager crateManager;
+    CrateVirtualManager crateVirtualManager;
     CrateBlockManager crateBlockManager;
     PlayerManager playerManager;
 
@@ -55,29 +61,32 @@ public final class Main extends JavaPlugin implements Listener {
 
         instance = this;
 
-        lootBoxManager = new LootBoxManager();
-        crateManager = new CrateManager();
-        crateBlockManager = new CrateBlockManager(this, crateManager);
-        editChances = new EditChances();
-        editOptions = new EditOptions();
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            lootBoxManager = new LootBoxManager();
+            crateManager = new CrateManager();
+            crateVirtualManager = new CrateVirtualManager();
+            crateBlockManager = new CrateBlockManager(this, crateManager, crateVirtualManager);
+            editChances = new EditChances();
+            editOptions = new EditOptions();
 
-        new FilterMenu();
+            new VirtualMenu(this);
+            new FilterMenu();
 
-        previewRewards = new PreviewRewards(this);
-        playerManager = new PlayerManager(this, crateManager);
+            previewRewards = new PreviewRewards(this);
+            playerManager = new PlayerManager(this, crateManager);
 
-        backPackConfig = new BackPackConfig(crateManager);
+            backPackConfig = new BackPackConfig(crateManager);
 
-        backPackGUI = new BackPackGUI(backPackConfig, playerManager, this);
+            backPackGUI = new BackPackGUI(backPackConfig, playerManager, this);
 
-        loadCommands();
-        loadListeners();
+            loadCommands();
+            loadListeners();
 
+            Bukkit.getScheduler().runTaskTimer(this, playerManager::saveAllPlayers, 100, 100);
 
+            new HologramChestTask().runTaskTimer(this, 20, 120);
+        }, 100);
 
-        Bukkit.getScheduler().runTaskTimer(this, playerManager::saveAllPlayers, 100, 100);
-
-        new HologramChestTask().runTaskTimer(this, 20, 120);
 
     }
 
@@ -85,10 +94,12 @@ public final class Main extends JavaPlugin implements Listener {
     public void onDisable() {
         lootBoxManager.saveAll();
         crateManager.saveCrates();
+        crateVirtualManager.saveCrates();
         crateBlockManager.saveCrates();
     }
 
     void loadListeners(){
+        getServer().getPluginManager().registerEvents(new PlayerLeaveListener(), this);
         getServer().getPluginManager().registerEvents(new PlaceKeyLootListener(), this);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new EditListener(), this);
@@ -98,11 +109,13 @@ public final class Main extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new PlayerCrateRemoveListener(crateBlockManager), this);
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerReceivedKeyListener(playerManager, backPackConfig), this);
+        getServer().getPluginManager().registerEvents(new PlayerInteractRewardListener(), this);
     }
 
     void loadCommands(){
         getCommand("filtercrates").setExecutor(new FilterCommand());
 
+        getCommand("virtualcrate").setExecutor(new CrateVirtualCommand(crateVirtualManager, editChances, crateBlockManager, playerManager));
         getCommand("lootboxes").setExecutor(new LootboxesCommand());
         getCommand("crates").setExecutor(new CratesCommand());
         getCommand("lootbox").setExecutor(new LootBoxCommand(lootBoxManager, editChances));
@@ -113,6 +126,10 @@ public final class Main extends JavaPlugin implements Listener {
 
     public CrateManager getCrateManager() {
         return crateManager;
+    }
+
+    public CrateVirtualManager getCrateVirtualManager() {
+        return crateVirtualManager;
     }
 
     public LootBoxManager getLootBoxManager() {
@@ -137,6 +154,10 @@ public final class Main extends JavaPlugin implements Listener {
         }
 
         return ChatColor.translateAlternateColorCodes('&', message);
+    }
+
+    public PreviewRewards getPreviewRewards() {
+        return previewRewards;
     }
 
     public BackPackConfig getBackPackConfig() {

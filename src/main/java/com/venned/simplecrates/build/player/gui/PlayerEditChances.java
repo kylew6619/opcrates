@@ -1,4 +1,4 @@
-package com.venned.simplecrates.build.player;
+package com.venned.simplecrates.build.player.gui;
 
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.enums.EditMode;

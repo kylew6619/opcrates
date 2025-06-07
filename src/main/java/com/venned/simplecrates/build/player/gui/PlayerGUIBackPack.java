@@ -1,4 +1,4 @@
-package com.venned.simplecrates.build.player;
+package com.venned.simplecrates.build.player.gui;
 
 import com.venned.simplecrates.enums.ActionBackPack;
 import org.bukkit.entity.Player;

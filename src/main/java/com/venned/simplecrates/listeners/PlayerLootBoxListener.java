@@ -64,7 +64,7 @@ public class PlayerLootBoxListener implements Listener {
                             .filter(n -> n.isLootBox(event.getItem()))
                             .findFirst().orElse(null);
                     if (lootBox != null) {
-                        previewRewards.onPreview(event.getPlayer(), lootBox.getRewards(), lootBox.getTitlePreview().replace("&", "§"), PreviewRewards.TypePreview.LOOTBOX, lootBox);
+                        previewRewards.onPreview(event.getPlayer(), lootBox.getRewards(), lootBox.getTitlePreview().replace("&", "§"), PreviewRewards.TypePreview.LOOTBOX, lootBox, null);
                         event.setCancelled(true);
                     }
                 }

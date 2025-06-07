@@ -10,6 +10,17 @@ summary-text:
   - " "
   - "&7Join Server "
 
+#Impulse knock
+
+impulse-vector: 0.3
+impulse-y: 0.3
+
+#Opening title crate normal
+
+title-gui-opening-crate: "&6Opening {crate}"
+
+#Duration
+
 duration-crate-opening: 5 #seconds
 duration-lootbox-opening: 5 #seconds
 
@@ -20,6 +31,36 @@ status-color:
   DISABLED:
     color: RED
     bold: false
+
+#virtual reward
+hologram-reward-size:
+  x: 1.0
+  y: 1.0
+  z: 1.0
+
+#virtual menu
+menu-virtual:
+  title: "&cCrate %name%"
+  size: 36
+  slots:
+    13:
+      material: CHEST
+      name: "&cTreasure %name%"
+      crate: yes
+      lore:
+        - " "
+        - "&7View &f8 &7OP chests and pick %max_reward%"
+        - "&7to uncover &aamazing treasures"
+        - " "
+        - "&7Discover"
+        - " "
+        - "&aOwned &7> &f%owned%"
+        - " "
+        - "&cRight-Click to preview"
+    20:
+      material: BLACK_STAINED_GLASS
+      name: " "
+
 
 
 
@@ -64,6 +105,9 @@ filter-menu:
 
 
 messages:
+  disabled-reward-limit: "❌ You have reached the limit of disabled rewards for this crate ( {max_allowed )"
+  disabled-reward-remove: "✅ Reward {reward} has been enabled!"
+  disabled-reward-add: "⛔ Reward {reward} has been disabled"
   opening-lootbox: "&cOpening lootbox {lootbox}"
   no_key_crate: "&c&l(!) &cYou don't have the key {crate}"
   create_crate_name: "&c&l(!) &7Specify the name and displayName"

@@ -1,6 +1,7 @@
 package com.venned.simplecrates.build.player;
 
 import com.venned.simplecrates.build.ItemReward;
+import com.venned.simplecrates.build.crate.CrateBlock;
 import com.venned.simplecrates.gui.preview.PreviewRewards;
 import com.venned.simplecrates.interfaces.Opening;
 import org.bukkit.inventory.Inventory;
@@ -17,6 +18,8 @@ public class PlayerPreview {
     PreviewRewards.TypePreview typePreview;
     Opening opening;
 
+    CrateBlock crateBlock;
+
     public PlayerPreview(Inventory inventory, List<ItemReward> rewardList, UUID uuid, String title, PreviewRewards.TypePreview typePreview, Opening opening) {
         this.inventory = inventory;
         this.rewardList = rewardList;
@@ -24,6 +27,15 @@ public class PlayerPreview {
         this.title = title;
         this.typePreview = typePreview;
         this.opening = opening;
+    }
+
+
+    public void setCrateBlock(CrateBlock crateBlock) {
+        this.crateBlock = crateBlock;
+    }
+
+    public CrateBlock getCrateBlock() {
+        return crateBlock;
     }
 
     public Opening getOpening() {

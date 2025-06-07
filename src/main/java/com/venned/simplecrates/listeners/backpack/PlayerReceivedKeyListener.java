@@ -2,6 +2,7 @@ package com.venned.simplecrates.listeners.backpack;
 
 import com.venned.simplecrates.Main;
 import com.venned.simplecrates.build.BackPackKey;
+import com.venned.simplecrates.build.crate.Crate;
 import com.venned.simplecrates.build.player.CrateKeyPlayer;
 import com.venned.simplecrates.build.player.PlayerData;
 import com.venned.simplecrates.events.PlayerReceivedKeyEvent;
@@ -47,7 +48,6 @@ public class PlayerReceivedKeyListener implements Listener {
             return;
         }
 
-        System.out.println("Amount " + event.getAmount());
 
         event.setCancelled(true);
 
@@ -76,9 +76,6 @@ public class PlayerReceivedKeyListener implements Listener {
                     event.getPlayer().sendMessage(Main.getMessage("backpack-full", Map.of(
                             "crate", crateKeyPlayer.getCrate().getName()
                     )));
-
-                    event.getPlayer().getInventory().addItem(event.getKey());
-
                     return;
                 }
 
@@ -87,20 +84,21 @@ public class PlayerReceivedKeyListener implements Listener {
                 crateKeyPlayer.increment(amountToAdd);
 
                 event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&',
-                        "&aYou received &e" + amountToAdd + " &akey(s) for the crate '&e" + event.getCrate().getDisplayName() +
+                        "&aYou received &e" + amountToAdd + " &akey(s) for the crate '&e" + ((Crate) event.getCrate()).getDisplayName() +
                                 "&a'. Now you have &e" + crateKeyPlayer.getKeys() + " &akeys."));
 
                 if (depositAmount > amountToAdd) {
                     event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&',
                             "&cYour key backpack is full. &7Only " + amountToAdd + " out of " + depositAmount + " were added."));
-                } else {
-                    clone.setAmount(amountToAdd);
+
+                    clone.setAmount(depositAmount - amountToAdd);
                     event.getPlayer().getInventory().addItem(clone);
+
                 }
 
             } else {
-                String message = "You have received your first crate key'" + event.getCrate().getDisplayName() + "'.";
-                crateKeyPlayers.add(new CrateKeyPlayer(event.getCrate(), event.getAmount())); // Agregar nueva clave
+                String message = "You have received your first crate key'" + ((Crate) event.getCrate()).getDisplayName() + "'.";
+                crateKeyPlayers.add(new CrateKeyPlayer(((Crate) event.getCrate()), event.getAmount())); // Agregar nueva clave
                 event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', message));
             }
         }

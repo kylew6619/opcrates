@@ -201,7 +201,6 @@ public class LootBoxManager {
 
                             String[] namespaceSplit = keyRaw.split(":");
                             if (namespaceSplit.length == 2) {
-                                System.out.println("Colocndo meta " + namespaceSplit[0]  + namespaceSplit[1]);
                                 NamespacedKey key = new NamespacedKey(namespaceSplit[0], namespaceSplit[1]);
                                 meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, valueElement.getAsString());
                             }

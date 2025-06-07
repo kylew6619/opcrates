@@ -5,13 +5,18 @@ import com.venned.simplecrates.build.crate.Crate;
 import com.venned.simplecrates.build.crate.CrateBlock;
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.player.PlayerData;
+import com.venned.simplecrates.build.virtual.CrateVirtual;
+import com.venned.simplecrates.gui.opening.CrateVirtualOpening;
 import com.venned.simplecrates.gui.preview.PreviewRewards;
+import com.venned.simplecrates.gui.virtual.VirtualMenu;
+import com.venned.simplecrates.interfaces.Opening;
 import com.venned.simplecrates.manager.crate.CrateBlockManager;
 import com.venned.simplecrates.manager.player.PlayerManager;
 import com.venned.simplecrates.utils.NameSpaceUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,6 +27,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 
@@ -54,14 +60,27 @@ public class PlayerCrateListener implements Listener {
             if (event.getAction() == Action.LEFT_CLICK_BLOCK && !event.getPlayer().isSneaking()) {
                 event.setCancelled(true);
                 String title = crateBlock.getCrate().getPreviewTitle().replace("&", "§");
-                previewRewards.onPreview(event.getPlayer(), crateBlock.getCrate().getRewards(), title, PreviewRewards.TypePreview.CRATE, crateBlock.getCrate());
+                if(crateBlock.getCrate() instanceof Crate) {
+                    previewRewards.onPreview(event.getPlayer(), crateBlock.getCrate().getRewards(), title, PreviewRewards.TypePreview.CRATE, (Opening) crateBlock.getCrate(), null);
+                } else if(crateBlock.getCrate() instanceof CrateVirtual virtual) {
+                    VirtualMenu.open(event.getPlayer(), virtual, crateBlock);
+                }
             } else if (event.getHand() == EquipmentSlot.HAND) {
                 if(event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                     event.setCancelled(true);
+
+                    if(crateBlock.getCrate() instanceof  Crate){
+
+
                     ItemStack itemStack = event.getPlayer().getInventory().getItemInMainHand();
                     ItemMeta itemMeta = itemStack.getItemMeta();
                     if(itemMeta != null) {
+
+
+
                         if (itemMeta.getPersistentDataContainer().has(NameSpaceUtils.key)) {
+
+
                             String key = itemMeta.getPersistentDataContainer().get(NameSpaceUtils.key, PersistentDataType.STRING);
                             if(key.equalsIgnoreCase(crateBlock.getCrate().getName())){
 
@@ -83,7 +102,10 @@ public class PlayerCrateListener implements Listener {
                                         }
                                     }
 
-                                    openAllKeys(event.getPlayer(), crateBlock.getCrate(), amount);
+                                    if(crateBlock.getCrate() instanceof Crate crate) {
+
+                                        openAllKeys(event.getPlayer(), crate, amount);
+                                    }
 
                                     return;
                                 }
@@ -95,12 +117,44 @@ public class PlayerCrateListener implements Listener {
                                 opening.add(event.getPlayer());
                                 return;
                             } else {
+
+
+                                double impulse = Main.getInstance().getConfig().getDouble("impulse-vector", 0.3);
+                                double impulseY = Main.getInstance().getConfig().getDouble("impulse-y", 0.3);
+
+                                Player player = event.getPlayer();
+                                Location crateLocation = event.getClickedBlock().getLocation().add(0.5, 0.5, 0.5);
+                                Location playerLocation = player.getLocation();
+                                Vector knockback = playerLocation.toVector().subtract(crateLocation.toVector()).normalize().multiply(impulse);
+                                knockback.setY(impulseY);
+                                player.setVelocity(knockback);
                                 event.getPlayer().sendMessage(Main.getMessage("no_key_crate", Map.of("crate", crateBlock.getCrate().getDisplayName())));
                                 return;
                             }
                         }
                     }
+
+
+
+                        double impulse = Main.getInstance().getConfig().getDouble("impulse-vector", 0.3);
+                        double impulseY = Main.getInstance().getConfig().getDouble("impulse-y", 0.3);
+
+
+                        Player player = event.getPlayer();
+                        Location crateLocation = event.getClickedBlock().getLocation().add(0.5, 0.5, 0.5);
+                        Location playerLocation = player.getLocation();
+                        Vector knockback = playerLocation.toVector().subtract(crateLocation.toVector()).normalize().multiply(impulse);
+                        knockback.setY(impulseY);
+                        player.setVelocity(knockback);
+
                     event.getPlayer().sendMessage(Main.getMessage("no_key_crate", Map.of("crate", crateBlock.getCrate().getDisplayName())));
+                } else if(crateBlock.getCrate() instanceof CrateVirtual virtual) {
+
+                        VirtualMenu.open(event.getPlayer(), virtual, crateBlock);
+                    //    CrateVirtualOpening.open(event.getPlayer(), virtual, crateBlock);
+
+
+                    }
                 }
             }
         }

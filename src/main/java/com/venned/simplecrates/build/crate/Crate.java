@@ -4,6 +4,7 @@ import com.venned.simplecrates.Main;
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.player.PlayerData;
 import com.venned.simplecrates.gui.opening.CreateOpening;
+import com.venned.simplecrates.interfaces.CrateInterface;
 import com.venned.simplecrates.interfaces.Opening;
 import com.venned.simplecrates.manager.player.PlayerManager;
 import com.venned.simplecrates.utils.NameSpaceUtils;
@@ -18,7 +19,7 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class Crate implements Opening {
+public class Crate implements Opening, CrateInterface {
 
     String name;
     String previewTitle;

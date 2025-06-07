@@ -1,13 +1,12 @@
 package com.venned.simplecrates.gui.backpack;
 
 import com.venned.simplecrates.Main;
-import com.venned.simplecrates.build.BackPack;
 import com.venned.simplecrates.build.BackPackKey;
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.crate.Crate;
 import com.venned.simplecrates.build.player.CrateKeyPlayer;
 import com.venned.simplecrates.build.player.PlayerData;
-import com.venned.simplecrates.build.player.PlayerGUIBackPack;
+import com.venned.simplecrates.build.player.gui.PlayerGUIBackPack;
 import com.venned.simplecrates.enums.ActionBackPack;
 import com.venned.simplecrates.manager.BackPackConfig;
 import com.venned.simplecrates.manager.player.PlayerManager;
@@ -23,7 +22,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -179,11 +177,12 @@ public class BackPackGUI implements Listener {
         }
 
 
-        if (item.getType() == Material.LEVER) {
-            event.setCancelled(true); // Evitar que el jugador saque la palanca
+        if (item.getItemMeta() != null) {
+            if(item.getItemMeta().getPersistentDataContainer().has(NameSpaceUtils.backpackGUI)){
+                if("change_mode".equalsIgnoreCase(item.getItemMeta().getPersistentDataContainer().get(NameSpaceUtils.backpackGUI, PersistentDataType.STRING))){
             PlayerGUIBackPack playerGUIBackPack = playerInGuiBackPack.get(player.getUniqueId());
             if (playerGUIBackPack != null) {
-           //     player.closeInventory();
+                //     player.closeInventory();
 
                 // Alternar entre los modos OPEN -> WITHDRAW -> DEPOSIT -> OPEN
                 ActionBackPack currentMode = playerGUIBackPack.getActionBackPack();
@@ -199,8 +198,11 @@ public class BackPackGUI implements Listener {
                 }
 
                 openInventory(player, newMode, playerGUIBackPack.getInventory(), playerGUIBackPack);
+                return;
             }
-            return;
+            }
+            }
+
         }
 
         if(item.getItemMeta() != null){
@@ -307,6 +309,7 @@ public class BackPackGUI implements Listener {
 
                     } else if (playerGUIBackPack.getActionBackPack() == ActionBackPack.OPEN) {
                         int amount_open = moveAll ? crateKeyPlayer.getKeys() : Math.min(crateKeyPlayer.getKeys(), maxAmount);
+
                         if (amount_open <= 0) return;
 
 

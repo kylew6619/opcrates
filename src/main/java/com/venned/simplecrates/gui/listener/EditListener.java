@@ -2,7 +2,7 @@ package com.venned.simplecrates.gui.listener;
 
 import com.venned.simplecrates.Main;
 import com.venned.simplecrates.build.ItemReward;
-import com.venned.simplecrates.build.player.PlayerEditChances;
+import com.venned.simplecrates.build.player.gui.PlayerEditChances;
 import com.venned.simplecrates.enums.EditMode;
 import com.venned.simplecrates.utils.NameSpaceUtils;
 import org.bukkit.Bukkit;
@@ -12,7 +12,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.persistence.PersistentDataType;
 
 public class EditListener implements Listener {

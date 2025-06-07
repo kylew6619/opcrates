@@ -3,11 +3,15 @@ package com.venned.simplecrates.gui.preview;
 import com.venned.simplecrates.Main;
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.crate.Crate;
+import com.venned.simplecrates.build.crate.CrateBlock;
 import com.venned.simplecrates.build.player.PlayerPreview;
+import com.venned.simplecrates.build.virtual.CrateVirtual;
+import com.venned.simplecrates.gui.virtual.VirtualMenu;
 import com.venned.simplecrates.interfaces.Opening;
 import com.venned.simplecrates.utils.NameSpaceUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
@@ -27,6 +31,7 @@ import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,7 +51,7 @@ public class PreviewRewards implements Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    public void onPreview(Player player, List<ItemReward> rewards, String title, TypePreview typePreview, Opening opening) {
+    public void onPreview(Player player, List<ItemReward> rewards, String title, TypePreview typePreview, Opening opening, @Nullable CrateBlock crateBlock) {
 
         Inventory inventory = Bukkit.createInventory(null, 54, title);
 
@@ -69,7 +74,7 @@ public class PreviewRewards implements Listener {
             if (itemMeta.getLore() == null) {
 
                 lore.add(" ");
-                if(typePreview == TypePreview.CRATE) {
+                if(opening instanceof Crate) {
 
                     boolean isDisabled = itemReward.getDisabledPlayers().contains(player.getUniqueId());
 
@@ -86,7 +91,8 @@ public class PreviewRewards implements Listener {
                         chatColor = ChatColor.GRAY;
                     }
 
-                    String status = (isBold ? ChatColor.BOLD : "") + "" + chatColor + statusKey;
+                    String status = chatColor + (isBold ? "" + ChatColor.BOLD : "") + statusKey;
+
 
 
                     for (int z = 0; z < lore.size(); z++) {
@@ -106,14 +112,16 @@ public class PreviewRewards implements Listener {
                 } else if (itemMeta.getLore() != null || !itemMeta.getLore().isEmpty()) {
                     List<String> loreGet = itemMeta.getLore();
                     lore.add(" ");
-                if(typePreview == TypePreview.CRATE) {
-                    for (int z = 0; z < lore.size(); z++) {
-                        lore.set(z, lore.get(z)
-                                .replace("{chance}", String.valueOf(itemReward.getChance()))
-                                .replace("{status}", itemReward.getDisabledPlayers().contains(player.getUniqueId()) ? "Disabled" : "Enabled")
-                                .replace("&", "§")
-                        );
-                    }
+                if(opening instanceof Crate) {
+
+                        for (int z = 0; z < lore.size(); z++) {
+                            lore.set(z, lore.get(z)
+                                    .replace("{chance}", String.valueOf(itemReward.getChance()))
+                                    .replace("{status}", itemReward.getDisabledPlayers().contains(player.getUniqueId()) ? "Disabled" : "Enabled")
+                                    .replace("&", "§")
+                            );
+                        }
+
                 }  else {
                     lore.clear();
                     lore.addAll(loreGet);
@@ -141,16 +149,38 @@ public class PreviewRewards implements Listener {
                 itemStack.setItemMeta(itemMeta);
                 inventory.setItem(i, itemStack);
 
-
                 modified.add(itemReward);
 
         }
+
+
+        /*
+        if(crateBlock != null){
+            ItemStack back = new ItemStack(Material.ARROW);
+            ItemMeta backMeta = back.getItemMeta();
+            backMeta.setDisplayName("§c<-");
+            backMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            backMeta.getPersistentDataContainer().set(NameSpaceUtils.back, PersistentDataType.BOOLEAN, true);
+            back.setItemMeta(backMeta);
+            inventory.setItem(53, back);
+        }
+
+         */
+
         player.openInventory(inventory);
 
         previewMenu.removeIf(p->p.getUUID().equals(player.getUniqueId()));
-        previewMenu.add(new PlayerPreview(inventory, rewards, player.getUniqueId(), title, typePreview, opening));
+
+        PlayerPreview playerPreview = new PlayerPreview(inventory, rewards, player.getUniqueId(), title, typePreview, opening);
+        if(crateBlock != null){
+            playerPreview.setCrateBlock(crateBlock);
+        }
+
+        previewMenu.add(playerPreview);
 
     }
+
+
 
     @EventHandler
     public void onClick(InventoryClickEvent event){
@@ -164,6 +194,10 @@ public class PreviewRewards implements Listener {
             ItemStack item = event.getCurrentItem();
             if(item == null) return;
             if(item.getItemMeta() != null){
+                if(item.getItemMeta().getPersistentDataContainer().has(NameSpaceUtils.back)){
+                    VirtualMenu.open(player, (CrateVirtual) previewRewards.getOpening(), previewRewards.getCrateBlock());
+                    return;
+                }
                 if(item.getItemMeta().getPersistentDataContainer().has(NameSpaceUtils.rewardName)){
                     String rewardName = item.getItemMeta().getPersistentDataContainer().get(NameSpaceUtils.rewardName, PersistentDataType.STRING);
                     for(ItemReward itemReward : previewRewards.getRewardList()){
@@ -192,17 +226,20 @@ public class PreviewRewards implements Listener {
 
                                 if (isCurrentlyDisabled) {
                                     itemReward.getDisabledPlayers().remove(playerId);
+
+                                    player.sendMessage(Main.getMessage("disabled-reward-remove", Map.of("reward", itemReward.getName())));
                                 } else {
                                     if (disabledCount < maxAllowed || player.isOp()) {
                                         itemReward.getDisabledPlayers().add(playerId);
+                                        player.sendMessage(Main.getMessage("disabled-reward-add", Map.of("reward", itemReward.getName())));
                                     } else {
-                                        player.sendMessage(ChatColor.RED + "¡You have reached the limit of disabled rewards for this crate (" + maxAllowed + ")!");
+                                        player.sendMessage(Main.getMessage("disabled-reward-limit", Map.of("max_allowed", ""+ maxAllowed)));
                                         return;
                                     }
                                 }
 
 
-                                onPreview(player, previewRewards.getRewardList(), previewRewards.getTitle(), previewRewards.getTypePreview(), previewRewards.getOpening());
+                                onPreview(player, previewRewards.getRewardList(), previewRewards.getTitle(), previewRewards.getTypePreview(), previewRewards.getOpening(), null);
 
                             }
                         }
@@ -215,6 +252,18 @@ public class PreviewRewards implements Listener {
 
     @EventHandler
     public void onClose(InventoryCloseEvent event){
+
+        Player player = (Player) event.getPlayer();
+
+        PlayerPreview preview = previewMenu.stream().filter(p->p.getUUID().equals(event.getPlayer().getUniqueId())).findFirst().orElse(null);
+        if(preview == null) return;
+        if(preview.getCrateBlock() != null){
+            Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+                VirtualMenu.open(player, (CrateVirtual) preview.getOpening(), preview.getCrateBlock());
+            }, 5);
+
+        }
+
         previewMenu.removeIf(p->p.getUUID().equals(event.getPlayer().getUniqueId()));
     }
 

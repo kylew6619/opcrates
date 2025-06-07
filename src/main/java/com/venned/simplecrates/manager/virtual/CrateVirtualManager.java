@@ -1,11 +1,13 @@
-package com.venned.simplecrates.manager.crate;
+package com.venned.simplecrates.manager.virtual;
+
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.venned.simplecrates.Main;
-import com.venned.simplecrates.build.crate.Crate;
 import com.venned.simplecrates.build.ItemReward;
+import com.venned.simplecrates.build.crate.Crate;
+import com.venned.simplecrates.build.virtual.CrateVirtual;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -21,13 +23,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CrateManager {
+public class CrateVirtualManager {
 
-    private final Set<Crate> crates = new HashSet<>();
+    private final Set<CrateVirtual> crates = new HashSet<>();
     private final File cratesFolder;
 
-    public CrateManager() {
-        cratesFolder = new File(Main.getInstance().getDataFolder(), "crates");
+    public CrateVirtualManager() {
+        cratesFolder = new File(Main.getInstance().getDataFolder(), "crates_virtual");
 
         if (!cratesFolder.exists()) {
             cratesFolder.mkdirs();
@@ -59,12 +61,41 @@ public class CrateManager {
             List<String> keyLore = config.getStringList("key.lore").stream().map(s -> s.replace("&", "§")).collect(Collectors.toList());
             String title = config.getString("titlePreview");
 
+            String materialBlockName = config.getString("opening_material_block");
+            String materialStairName = config.getString("opening_material_stair");
+
+            int maxTime = config.getInt("maxTime");
+
+
+            Material materialStair = Material.matchMaterial(materialStairName);
+            Material materialBlock = Material.matchMaterial(materialBlockName);
+
+
+            int countdown = config.getInt("countdown");
+
             ItemStack itemKey = new ItemStack(material);
             ItemMeta meta = itemKey.getItemMeta();
             if (meta != null) {
                 meta.setDisplayName(keyName);
                 meta.setLore(keyLore);
                 itemKey.setItemMeta(meta);
+            }
+
+            Map<UUID, Integer> ownedMap = new HashMap<>();
+            if (config.contains("owned")) {
+                ConfigurationSection ownedSection = config.getConfigurationSection("owned");
+                if (ownedSection != null) {
+                    for (String uuidStr : ownedSection.getKeys(false)) {
+                        try {
+                            UUID uuid = UUID.fromString(uuidStr);
+                            int count = ownedSection.getInt(uuidStr, 0);
+                            ownedMap.put(uuid, count);
+                        } catch (IllegalArgumentException ex) {
+                            // Si no es UUID válido, lo ignoramos o loggeamos
+                            Bukkit.getLogger().warning("UUID inválido en owned de " + name + ": " + uuidStr);
+                        }
+                    }
+                }
             }
 
             List<ItemReward> rewards = new ArrayList<>();
@@ -86,12 +117,12 @@ public class CrateManager {
                 rewards.add(new ItemReward(rewardName, itemStack, chance, commands, visible, playerDisabled, glow, messageWin));
             }
 
-            crates.add(new Crate(name, rewards, displayName, max_reward, lore, hologramText, itemKey, announce, title, announceStart, announceStatus));
+            crates.add(new CrateVirtual(name, rewards, displayName, max_reward, lore, hologramText, itemKey, announce, title, announceStart, announceStatus, ownedMap, countdown, materialBlock, materialStair, maxTime));
         }
     }
 
     public void saveCrates() {
-        for (Crate crate : crates) {
+        for (CrateVirtual crate : crates) {
             File file = new File(cratesFolder, crate.getName() + ".yml");
             FileConfiguration config = YamlConfiguration.loadConfiguration(file);
 
@@ -102,11 +133,36 @@ public class CrateManager {
             config.set("textHologram", crate.getHologramText());
             config.set("announce", crate.getAnnouncementFinish());
             config.set("announce_start", crate.getAnnouncementStart());
-            config.set("announce_status", crate.isAnnounceStatus());
+            config.set("announce_status", crate.isAnnounce());
             config.set("titlePreview", crate.getPreviewTitle());
             config.set("key.material", crate.getItemKey().getType().name());
             config.set("key.name", crate.getItemKey().getItemMeta().getDisplayName());
             config.set("key.lore", crate.getItemKey().getItemMeta().getLore());
+            config.set("countdown", crate.getCountDown());
+
+            config.set("opening_material_block", crate.getOpeningMaterialBlock().name());
+            config.set("opening_material_stair", crate.getOpeningMaterialStair().name());
+
+
+            Map<UUID, Integer> ownedMap = crate.getOwned();
+            if (ownedMap != null && !ownedMap.isEmpty()) {
+                // Creamos / obtenemos la sección “owned”
+                ConfigurationSection ownedSection = config.getConfigurationSection("owned");
+                if (ownedSection == null) {
+                    ownedSection = config.createSection("owned");
+                }
+                // Para evitar que queden entradas antiguas, eliminamos todo lo que hubiera en “owned”
+                for (String key : OwnedSectionKeys(config, "owned")) {
+                    ownedSection.set(key, null);
+                }
+                // Ahora volvemos a poner cada UUID → Integer
+                for (Map.Entry<UUID, Integer> entry : ownedMap.entrySet()) {
+                    ownedSection.set(entry.getKey().toString(), entry.getValue());
+                }
+            } else {
+                // Si está vacío o es null, nos aseguramos de borrar la sección entera si existiera
+                config.set("owned", null);
+            }
 
             List<Map<String, Object>> rewardList = new ArrayList<>();
             for (ItemReward reward : crate.getRewards()) {
@@ -132,11 +188,11 @@ public class CrateManager {
         }
     }
 
-    public Set<Crate> getCrates() {
+    public Set<CrateVirtual> getCrates() {
         return crates;
     }
 
-    public void addCrates(Crate crate) {
+    public void addCrates(CrateVirtual crate) {
         crates.add(crate);
         saveCrates();
     }
@@ -149,8 +205,13 @@ public class CrateManager {
         loadCrates();
     }
 
-    public Crate getCrateByName(String name) {
+    public CrateVirtual getCrateByName(String name) {
         return crates.stream().filter(c -> c.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+    }
+
+    private List<String> OwnedSectionKeys(FileConfiguration config, String path) {
+        ConfigurationSection sec = config.getConfigurationSection(path);
+        return (sec == null) ? Collections.emptyList() : new ArrayList<>(sec.getKeys(false));
     }
 
     private Map<String, Object> serializeItemStack(ItemStack item) {

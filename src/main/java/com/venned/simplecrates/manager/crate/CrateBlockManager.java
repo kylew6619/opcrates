@@ -3,6 +3,8 @@ package com.venned.simplecrates.manager.crate;
 import com.venned.simplecrates.Main;
 import com.venned.simplecrates.build.crate.Crate;
 import com.venned.simplecrates.build.crate.CrateBlock;
+import com.venned.simplecrates.build.virtual.CrateVirtual;
+import com.venned.simplecrates.manager.virtual.CrateVirtualManager;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -17,12 +19,14 @@ public class CrateBlockManager {
 
     Set<CrateBlock> crateBlocks;
     CrateManager crateManager;
+    CrateVirtualManager crateVirtualManager;
     private final File cratesDataFile;
     private FileConfiguration cratesDataConfig;
 
-    public CrateBlockManager(Plugin plugin, CrateManager crateManager) {
+    public CrateBlockManager(Plugin plugin, CrateManager crateManager, CrateVirtualManager crateVirtualManager) {
         crateBlocks = new HashSet<CrateBlock>();
         this.crateManager = crateManager;
+        this.crateVirtualManager = crateVirtualManager;
 
         cratesDataFile = new File(Main.getInstance().getDataFolder(), "crates_data.yml");
 
@@ -47,7 +51,7 @@ public class CrateBlockManager {
     }
 
     void loadCrateBlocks() {
-        for(CrateBlock crateBlock : crateBlocks) {
+        for (CrateBlock crateBlock : crateBlocks) {
             crateBlock.removeHologram();
         }
         crateBlocks.clear();
@@ -59,14 +63,24 @@ public class CrateBlockManager {
 
         for (String key : section.getKeys(false)) {
             String crateName = section.getString(key + ".crate_name");
+
+
+
             Location location = deserializeLocation(section.getString(key + ".location"));
 
-            Crate crate = crateManager.getCrateByName(crateName);
-            if (crate == null) continue;
 
-            crateBlocks.add(new CrateBlock(location, crate));
+            boolean virtual = section.getBoolean(key + ".virtual", false);
+
+            if(!virtual){
+                Crate crate = crateManager.getCrateByName(crateName);
+                crateBlocks.add(new CrateBlock(location, crate));
+            } else {
+                CrateVirtual v = crateVirtualManager.getCrateByName(crateName);
+                crateBlocks.add(new CrateBlock(location, v));
+            }
         }
     }
+
 
     public void removeCrateBlock(Location location) {
 
@@ -88,10 +102,18 @@ public class CrateBlockManager {
 
             crateBlock.removeHologram();
 
+
+
             String path = "crates." + index;
 
             cratesDataConfig.set(path + ".crate_name", crateBlock.getCrate().getName());
-            cratesDataConfig.set(path + ".location", serializeLocation(crateBlock.getLocation()));
+
+            if(crateBlock.getLocation().getWorld() != null) {
+                cratesDataConfig.set(path + ".location", serializeLocation(crateBlock.getLocation()));
+            }
+            if(crateBlock.getCrate() instanceof CrateVirtual){
+                cratesDataConfig.set(path + ".virtual", true);
+            }
 
             index++;
         }
@@ -116,6 +138,7 @@ public class CrateBlockManager {
 
     private Location deserializeLocation(String data) {
         String[] parts = data.split(",");
+
         return new Location(
                 Main.getInstance().getServer().getWorld(parts[0]),
                 Double.parseDouble(parts[1]),

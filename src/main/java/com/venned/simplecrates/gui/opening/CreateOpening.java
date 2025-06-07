@@ -32,7 +32,12 @@ public class CreateOpening {
     };
 
     public static void open(Player player, Crate crate) {
-        Inventory inventory = Bukkit.createInventory(null, 27, ChatColor.translateAlternateColorCodes('&', "&6Opening " + crate.getName()));
+        String titleCrate = Main.getInstance().getConfig().getString("title-gui-opening-crate");
+
+        titleCrate = titleCrate.replace("{crate}",crate.getDisplayName());
+        titleCrate = titleCrate.replace("&", "§");
+        
+        Inventory inventory = Bukkit.createInventory(null, 27,titleCrate);
         player.openInventory(inventory);
 
         MapUtils.playerOpenings.removeIf(p->p.getUUID().equals(player.getUniqueId()));

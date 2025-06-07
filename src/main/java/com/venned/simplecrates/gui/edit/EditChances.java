@@ -2,7 +2,7 @@ package com.venned.simplecrates.gui.edit;
 
 import com.venned.simplecrates.build.ItemReward;
 import com.venned.simplecrates.build.LootBox;
-import com.venned.simplecrates.build.player.PlayerEditChances;
+import com.venned.simplecrates.build.player.gui.PlayerEditChances;
 import com.venned.simplecrates.interfaces.Opening;
 import com.venned.simplecrates.utils.NameSpaceUtils;
 import org.bukkit.Bukkit;

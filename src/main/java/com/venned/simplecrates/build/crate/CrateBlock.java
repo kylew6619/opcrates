@@ -1,37 +1,137 @@
 package com.venned.simplecrates.build.crate;
 
+import com.venned.simplecrates.build.ItemReward;
+import com.venned.simplecrates.interfaces.CrateInterface;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
+import net.minecraft.world.entity.Entity;
+import org.bukkit.*;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.craftbukkit.v1_21_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_21_R3.entity.CraftTextDisplay;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.StreamSupport;
 
 public class CrateBlock {
 
     private Location location;
-    private Crate crate;
+    private CrateInterface crate;
     private List<TextDisplay> texts;
 
-    public CrateBlock(Location location, Crate crate) {
+    //VIRTUAL
+
+    UUID opener;
+    Material originalMaterial;
+    Map<Location, BlockData> originales = new HashMap<>();
+    private final List<ItemReward> itemsRewards;
+    List<BlockData> originalBlockData = new ArrayList<>();
+    private final List<Location> chest;
+    private final List<Location> chestUsed;
+    private final List<Entity> entitiesVisuals;
+    private final Set<BukkitTask> task;
+    private int currentReward;
+
+    public CrateBlock(Location location, CrateInterface crate) {
         this.location = location;
         this.crate = crate;
         this.texts = new ArrayList<>();
+
+        //VIRTUAL
+        this.chestUsed = new ArrayList<>();
+        this.entitiesVisuals = new ArrayList<>();
+        this.chest = new ArrayList<>();
+        this.task = new HashSet<>();
+        this.currentReward = 0;
+        this.itemsRewards = new ArrayList<>();
+        this.opener = null;
+
         generateHologram();
     }
 
-    private void generateHologram() {
+    public void setOpener(UUID opener) {
+        this.opener = opener;
+    }
+
+    public UUID getOpener() {
+        return opener;
+    }
+
+    public List<ItemReward> getItemsRewards() {
+        return itemsRewards;
+    }
+
+    public List<BlockData> getOriginalBlockData() {
+        return originalBlockData;
+    }
+
+    public Map<Location, BlockData> getOriginales() {
+        return originales;
+    }
+
+    public Set<BukkitTask> getTask() {
+        return task;
+    }
+
+    public void setOriginalMaterial(Material originalMaterial) {
+        this.originalMaterial = originalMaterial;
+    }
+
+    public Material getOriginalMaterial() {
+        return originalMaterial;
+    }
+
+    public List<Location> getChestUsed(){
+        return chestUsed;
+    }
+
+    public List<Location> getChest() {
+        return chest;
+    }
+
+    public void deleteEntitiesVisuals(){
+        for(Entity entity : entitiesVisuals){
+            for (Player players : Bukkit.getOnlinePlayers()) {
+                entity.remove(Entity.RemovalReason.KILLED);
+                ((CraftPlayer) players).getHandle().connection.sendPacket(new net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket(entity.getId())); // Primero spawn
+            }
+        }
+    }
+
+    public void incrementCurrentReward(int amount){
+        this.currentReward += amount;
+    }
+
+    public void setCurrentReward(int currentReward) {
+        this.currentReward = currentReward;
+    }
+
+    public int getCurrentReward() {
+        return currentReward;
+    }
+
+    public List<Entity> getEntitiesVisuals() {
+        return entitiesVisuals;
+    }
+
+
+    private void deleteHologram(){
+        for(TextDisplay display : texts){
+            ClientboundRemoveEntitiesPacket removeEntitiesPacket = new ClientboundRemoveEntitiesPacket(display.getEntityId());
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                ((CraftPlayer) player).getHandle().connection.sendPacket(removeEntitiesPacket);
+            }
+            texts.remove(display);
+        }
+
+    }
+
+    public void generateHologram() {
         List<String> hologramLines = crate.getHologramText();
         List<String> lines = new ArrayList<>(hologramLines);
         Collections.reverse(lines);
@@ -120,7 +220,7 @@ public class CrateBlock {
         return location;
     }
 
-    public Crate getCrate() {
+    public CrateInterface getCrate() {
         return crate;
     }
 
