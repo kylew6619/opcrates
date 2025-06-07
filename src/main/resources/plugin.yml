@@ -3,7 +3,17 @@ version: '${project.version}'
 main: com.venned.simplecrates.Main
 api-version: '1.20'
 commands:
+  filtercrates:
+    aliases:
+      - filterkeys
+    description: Filter
   lootbox:
     description: Manager Command
   crate:
     description: Crate Manager
+  backpack:
+    description: BackPack
+  crates:
+    description: View Crates
+  lootboxes:
+    description: View All Lootboxes

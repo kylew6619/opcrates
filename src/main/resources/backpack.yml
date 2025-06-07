@@ -1,0 +1,53 @@
+key_backpacks:
+  enabled: true
+  autoPickup: false
+  allow_withdraw: true
+  tradeable: false
+  disable_in_worlds:
+    - hub
+    - event
+
+lore-add:
+  - "&9Left-Click to %action% 1000 item"
+  - "&dRight-Click to %action% 10 item"
+  - "&8Shift-Left-Click to %action% 100 item"
+  - "&9Shift-Right-Click to %action% all"
+
+gui:
+  title: '&6&lYour Key Backpack'
+  size: 54
+  layout:
+    '0': glass
+    '1': test
+    '2': legendary
+    '3': mythic
+    '8': close_button
+    '10': change_mode
+keys:
+  test:
+    display_name: '&aTest Key'
+    material: TRIPWIRE_HOOK
+    storage_limit: 100
+    lore:
+      - '&7Store &eVote Keys &7automatically!'
+      - '&7Keys Owned: &e%amount%'
+      - '&7Storage Limit: &c%limit%'
+  legendary:
+    display_name: '&dLegendary Key'
+    material: GOLD_NUGGET
+    storage_limit: 50
+    lore:
+      - '&7This key is ultra rare!'
+      - '&7Keys Owned: &e%amount%'
+      - '&7Storage Limit: &c%limit%'
+  mythic:
+    display_name: '&bMythic Key'
+    material: DIAMOND
+    storage_limit: -1
+    lore:
+      - '&7Only the best players earn these!'
+      - '&7Keys Owned: &e%amount%'
+      - '&7Storage Limit: &aUnlimited'
+disabled_keys:
+  - basic
+  - common

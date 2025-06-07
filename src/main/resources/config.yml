@@ -10,8 +10,57 @@ summary-text:
   - " "
   - "&7Join Server "
 
-duration-crate-opening: 10 #seconds
-duration-lootbox-opening: 10 #seconds
+duration-crate-opening: 5 #seconds
+duration-lootbox-opening: 5 #seconds
+
+status-color:
+  ENABLED:
+    color: DARK_GREEN
+    bold: true
+  DISABLED:
+    color: RED
+    bold: false
+
+
+
+filter-menu:
+  title: "&cFilter Menu"
+  slots:
+    0:
+      type: item
+      material: BLACK_STAINED_GLASS_PANE
+      name: ""
+    1:
+      type: item
+      material: BLACK_STAINED_GLASS_PANE
+      name: ""
+    2:
+      type: item
+      material: BLACK_STAINED_GLASS_PANE
+      name: ""
+    3:
+      type: item
+      material: BLACK_STAINED_GLASS_PANE
+      name: ""
+    4:
+      type: item
+      material: BOOK
+      name: "&a&lREWARD FILTER"
+      lore:
+        - "&7Select a feature filter"
+    19:
+      type: crate-item
+      crate: test
+      lore:
+        - "&cClick to filter this"
+        - "{status}"
+    20:
+      type: crate-key
+      crate: test
+      lore:
+        - "&cClick to filter this"
+        - "{status}"
+
 
 
 messages:
@@ -25,3 +74,12 @@ messages:
   crate_reward_no_hand: "&c&l(!) &cHave an item in your hand"
   crate_set_key: "&c&l(!) &cCrate Set Key Success {crate}"
   crate_win_item: "&aYou won: {item_reward}"
+  backpack-left-click: "&aYou have withdrawn {crate} {amount}"
+  backpack-right-click: "&aYou have open {crate} {amount}"
+  backpack-disabled-withdraw: "&aCrates cannot be removed at this time."
+  backpack-deposit: "&cYou deposit {crate} {amount}"
+  backpack-not-enough-space: "&cYou don't have enough inventory space. Need {needed}, but you only have {available}."
+  backpack-full: "&cYour key backpack for {crate} full. You cannot deposit more."
+  filter-remove: "&cItem remove filter {name}"
+  filter-add: "&cItem add filter {name}"
+
